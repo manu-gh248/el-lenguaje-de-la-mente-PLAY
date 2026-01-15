@@ -68,7 +68,7 @@
         /* --- SLIDER STYLES UPDATED --- */
         .slider-track {
             position: relative;
-            height: 54px; /* Un poco más alto para el nuevo botón */
+            height: 54px;
             background: rgba(15, 23, 42, 0.4);
             border-radius: 27px;
             border: 1px solid rgba(255,255,255,0.05);
@@ -84,14 +84,11 @@
             width: 44px;
             height: 44px;
             margin-left: -22px; 
-            
-            /* NUEVO ESTILO: Moderno, oscuro, con borde brillante */
-            background: rgba(30, 41, 59, 0.8); /* Fondo oscuro translúcido */
+            background: rgba(30, 41, 59, 0.8);
             backdrop-filter: blur(4px);
-            border: 2px solid rgba(129, 140, 248, 0.6); /* Borde Indigo suave */
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2), 0 4px 6px rgba(0,0,0,0.3); /* Glow sutil */
+            border: 2px solid rgba(129, 140, 248, 0.6);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2), 0 4px 6px rgba(0,0,0,0.3);
             color: #e2e8f0;
-            
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -103,24 +100,9 @@
         .slider-knob:active { 
             cursor: grabbing; 
             transform: scale(1.05); 
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5); /* Glow más fuerte al pulsar */
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
             border-color: rgba(165, 180, 252, 0.9);
         }
-        
-        .slider-label-left, .slider-label-right {
-            position: absolute;
-            top: 0; bottom: 0;
-            display: flex;
-            align-items: center;
-            font-size: 10px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-        .slider-label-left { left: 15px; color: #ef4444; }
-        .slider-label-right { right: 15px; color: #22c55e; }
         
         .slider-fill-left {
             position: absolute; top: 0; left: 0; bottom: 0; width: 50%;
@@ -157,7 +139,7 @@
                     <h1 class="font-game text-lg text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300 leading-tight drop-shadow-sm">HERO'S AWAKENING</h1>
                     <p class="text-xs text-slate-300/80 flex items-center gap-1 mt-1">
                         <i data-lucide="shield" class="w-3 h-3"></i> Nivel <span id="userLevel" class="text-white font-bold">1</span>
-                        <span id="rankBadge" class="ml-2 px-2 py-0.5 rounded bg-white/10 text-[10px] border border-white/10">Novato</span>
+                        <span id="rankBadge" class="ml-2 px-2 py-0.5 rounded bg-white/10 text-[10px] border border-white/10 uppercase tracking-wide">Novato</span>
                     </p>
                 </div>
                 
@@ -206,6 +188,10 @@
                 <div class="p-1 rounded group-hover:bg-white/5 transition"><i data-lucide="bot" class="w-6 h-6 drop-shadow-sm"></i></div>
                 <span class="text-[10px] font-bold mt-1 uppercase tracking-wide">Mentor</span>
             </button>
+            <button onclick="renderOrigin()" class="nav-btn flex flex-col items-center text-slate-400 p-2 rounded-lg transition-all active:scale-95 group">
+                <div class="p-1 rounded group-hover:bg-white/5 transition"><i data-lucide="book-heart" class="w-6 h-6 drop-shadow-sm"></i></div>
+                <span class="text-[10px] font-bold mt-1 uppercase tracking-wide">El Origen</span>
+            </button>
             <button onclick="renderProfile()" class="nav-btn flex flex-col items-center text-slate-400 p-2 rounded-lg transition-all active:scale-95 group">
                 <div class="p-1 rounded group-hover:bg-white/5 transition"><i data-lucide="user" class="w-6 h-6 drop-shadow-sm"></i></div>
                 <span class="text-[10px] font-bold mt-1 uppercase tracking-wide">Perfil</span>
@@ -216,35 +202,26 @@
     <!-- JAVASCRIPT LOGIC -->
     <script>
         // --- 1. CONFIGURATION & DATA ---
-        const APP_VERSION = "2.6.0"; 
+        const APP_VERSION = "2.11.0"; 
         
         // --- GENERADOR DE FONDO DE ICONOS ---
         function generateBackground() {
             const bgContainer = document.getElementById('bg-pattern');
             const icons = ['sword', 'shield', 'heart', 'message-circle', 'zap', 'crown', 'book-open', 'star'];
-            const count = 30; // Cantidad de iconos flotantes
+            const count = 30; 
 
             for (let i = 0; i < count; i++) {
                 const iconName = icons[Math.floor(Math.random() * icons.length)];
                 const el = document.createElement('div');
                 el.className = 'bg-icon float-anim';
-                
-                // Random position
                 el.style.left = Math.random() * 100 + '%';
                 el.style.top = Math.random() * 100 + '%';
-                
-                // Random size (8bit feel: smallish)
-                const size = Math.floor(Math.random() * 20) + 15; // 15px to 35px
+                const size = Math.floor(Math.random() * 20) + 15; 
                 el.style.width = size + 'px';
                 el.style.height = size + 'px';
-                
-                // Random animation delay
                 el.style.animationDelay = (Math.random() * 5) + 's';
-                el.style.animationDuration = (Math.random() * 5 + 5) + 's'; // 5-10s duration
-
-                // Create SVG icon using lucide logic via innerHTML injection
+                el.style.animationDuration = (Math.random() * 5 + 5) + 's'; 
                 el.innerHTML = `<i data-lucide="${iconName}" style="width:100%; height:100%"></i>`;
-                
                 bgContainer.appendChild(el);
             }
         }
@@ -287,6 +264,16 @@
         }
 
         const TOTAL_MAX_XP = ALL_MISSIONS.reduce((sum, m) => sum + m.xp, 0);
+
+        // --- DEFINICIÓN DE RANGOS ---
+        const RANKS = [
+            { threshold: 0, title: "Novato" },
+            { threshold: 15, title: "Aprendiz" },
+            { threshold: 35, title: "Explorador" },
+            { threshold: 55, title: "Guerrero" },
+            { threshold: 75, title: "Líder" },
+            { threshold: 95, title: "Héroe" }
+        ];
 
         // --- 2. STATE MANAGEMENT ---
         let gameState = {
@@ -526,34 +513,44 @@
 
             if (scorePercent < 80) {
                 title = "INTENTO INCOMPLETO"; badge = "Aspirante"; color = "text-slate-400";
-                msg = "Tu puntuación es baja (<80%). Un verdadero héroe no se rinde. Recupera las misiones saltadas.";
+                msg = "Has llegado al final del recorrido, pero tu puntuación es baja (<80%). Un verdadero héroe no se rinde. Ve a tu Perfil, recupera las misiones 'Saltadas' y complétalas para graduarte.";
                 grad = false;
             } else if (scorePercent < 90) {
                 title = "HÉROE CONSCIENTE"; badge = "Bronce"; color = "text-amber-500";
-                msg = "Has despertado. Sigue practicando para elevar tu influencia.";
+                msg = "Has despertado. Tienes las herramientas básicas. Sigue practicando para elevar tu influencia.";
                 grad = true;
             } else if (scorePercent < 96) {
                 title = "LÍDER AUTÉNTICO"; badge = "Plata"; color = "text-slate-200";
-                msg = "Tu compromiso es notable. Lideras con el ejemplo.";
+                msg = "Tu compromiso es notable. Lideras con el ejemplo y has integrado los saberes del libro.";
                 grad = true;
             } else {
                 title = "AGENTE DEL CAMBIO"; badge = "Oro"; color = "text-yellow-400";
-                msg = "¡Extraordinario! Has alcanzado la maestría. 'Tú ya eres parte de ese cambio'.";
+                msg = "¡Extraordinario! Has alcanzado la maestría. Como dice Maite Moyá: 'Tú ya eres parte de ese cambio. Has despertado a tu héroe interior'.";
                 grad = true;
             }
 
             if (grad) launchConfetti();
 
             const html = `
-                <div class="text-center">
-                    <div class="w-24 h-24 rounded-full bg-white/5 mx-auto flex items-center justify-center mb-4 border-4 border-white/10 relative overflow-hidden backdrop-blur-md">
-                        <i data-lucide="award" class="w-12 h-12 ${color} relative z-10"></i>
+                <div class="text-center relative overflow-hidden rounded-xl -m-6 p-8" style="background-image: url('https://i.ibb.co/GQHsJr9C/liderapia-heaven.png'); background-size: cover; background-position: center;">
+                    <div class="absolute inset-0 bg-black/70 z-0"></div>
+                    <div class="relative z-10">
+                        <div class="w-24 h-24 rounded-full bg-white/10 mx-auto flex items-center justify-center mb-4 border-4 border-white/20 relative overflow-hidden backdrop-blur-md shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                            <i data-lucide="award" class="w-12 h-12 ${color} relative z-10 drop-shadow-lg"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold font-game mb-1 ${color} drop-shadow-md">${title}</h2>
+                        <p class="text-xs uppercase font-bold text-slate-300 mb-6 tracking-widest">Puntuación: ${Math.floor(scorePercent)}%</p>
+                        
+                        <div class="bg-black/40 p-6 rounded-xl mb-8 border border-white/10 text-sm text-slate-200 leading-relaxed backdrop-blur-sm shadow-inner">
+                            "${msg}"
+                        </div>
+
+                        ${!grad ? 
+                            `<button onclick="toggleModal(false); currentView='profile'; renderView();" class="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold border border-white/20 backdrop-blur-md transition-all">Recuperar Misiones</button>` 
+                            : 
+                            `<button onclick="if(confirm('¿Reiniciar?')){ localStorage.clear(); location.reload(); }" class="w-full py-4 btn-primary text-white rounded-xl font-bold shadow-xl shadow-indigo-500/40 transform hover:scale-105 transition-all">Aceptar Legado (Reiniciar)</button>`
+                        }
                     </div>
-                    <h2 class="text-2xl font-bold font-game mb-1 ${color}">${title}</h2>
-                    <p class="text-xs uppercase font-bold text-slate-400 mb-4">Puntuación: ${Math.floor(scorePercent)}%</p>
-                    <div class="bg-white/5 p-4 rounded-lg mb-6 border border-white/10 text-sm text-slate-300">"${msg}"</div>
-                    ${!grad ? `<button onclick="toggleModal(false); currentView='profile'; renderView();" class="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded font-bold border border-white/5">Recuperar Misiones</button>` : 
-                    `<button onclick="if(confirm('¿Reiniciar?')){ localStorage.clear(); location.reload(); }" class="w-full py-3 btn-primary text-white rounded font-bold shadow-lg shadow-indigo-500/30">Reiniciar Viaje</button>`}
                 </div>
             `;
             toggleModal(true, html);
@@ -565,18 +562,36 @@
         function renderView() {
             // Nav State
             document.querySelectorAll('.nav-btn').forEach((btn, idx) => {
-                const active = (idx === 0 && currentView === 'missions') || (idx === 1 && currentView === 'mentor') || (idx === 2 && currentView === 'profile');
-                btn.className = `nav-btn flex flex-col items-center p-2 rounded-lg transition-all active:scale-95 group ${active ? 'text-indigo-300' : 'text-slate-400'}`;
-                btn.querySelector('div').className = `p-1 rounded transition ${active ? 'bg-white/10' : 'group-hover:bg-white/5'}`;
+                const active = (idx === 0 && currentView === 'missions') || 
+                               (idx === 1 && currentView === 'mentor') || 
+                               (idx === 2 && currentView === 'origin') || 
+                               (idx === 3 && currentView === 'profile');
+                
+                if(active) {
+                    btn.classList.add('text-indigo-300');
+                    btn.classList.remove('text-slate-400');
+                    btn.querySelector('div').classList.add('bg-white/10');
+                } else {
+                    btn.classList.add('text-slate-400');
+                    btn.classList.remove('text-indigo-300');
+                    btn.querySelector('div').classList.remove('bg-white/10');
+                }
             });
 
             const c = document.getElementById('appContent');
             c.innerHTML = ''; 
             if (currentView === 'missions') renderMissionsView(c);
             if (currentView === 'mentor') renderMentorView(c);
+            if (currentView === 'origin') renderOriginView(c);
             if (currentView === 'profile') renderProfileView(c);
             lucide.createIcons();
         }
+
+        // Helpers
+        window.renderMissions = () => { currentView = 'missions'; renderView(); };
+        window.renderMentor = () => { currentView = 'mentor'; renderView(); };
+        window.renderOrigin = () => { currentView = 'origin'; renderView(); };
+        window.renderProfile = () => { currentView = 'profile'; renderView(); };
 
         function renderMissionsView(c) {
             c.insertAdjacentHTML('beforeend', `<div class="flex justify-between mb-4 fade-in"><div><h2 class="font-game text-lg text-white">Misiones Activas</h2><span class="text-xs text-slate-300/70">Cola: <b>${gameState.pendingIds.length}</b></span></div></div>`);
@@ -662,10 +677,50 @@
             `);
         }
 
-        // Helpers
-        window.renderMissions = () => { currentView = 'missions'; renderView(); };
-        window.renderMentor = () => { currentView = 'mentor'; renderView(); };
-        window.renderProfile = () => { currentView = 'profile'; renderView(); };
+        function renderOriginView(c) {
+            c.insertAdjacentHTML('beforeend', `
+                <div class="fade-in">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 bg-white/5 rounded-full mx-auto flex items-center justify-center border-2 border-yellow-500/30 mb-4 shadow-lg backdrop-blur-sm">
+                            <i data-lucide="book-open" class="w-8 h-8 text-yellow-300 drop-shadow-sm"></i>
+                        </div>
+                        <h2 class="font-game text-2xl text-white drop-shadow-sm mb-1">El Mapa del Tesoro</h2>
+                        <p class="text-xs text-slate-400 uppercase tracking-widest">El Origen del Héroe</p>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-xl border border-yellow-500/20 shadow-xl mb-6 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-600 via-amber-400 to-yellow-600"></div>
+                        
+                        <div class="space-y-4 text-sm text-slate-200 leading-relaxed italic">
+                            <p>"Todo comenzó con una pregunta simple pero devastadora: <span class="text-yellow-200 font-bold">¿Y si el liderazgo no fuera mandar, sino despertar?</span>"</p>
+                            
+                            <p>Este juego es la sombra digital de una obra que ha transformado miles de vidas: <strong>'Despierta al héroe que hay en ti'</strong>, de la Dra. Maite Moyá.</p>
+                            
+                            <p>No es un manual técnico lleno de gráficos fríos. Es una carta de amor a tu potencial dormido. En sus páginas, Maite nos enseña que el verdadero héroe no lleva capa ni vuela; el verdadero héroe escucha, valida, se cae, se levanta y se atreve a ser vulnerable.</p>
+                            
+                            <p>Este juego te ayuda a <span class="text-indigo-300 font-bold">hacer</span>. El libro te ayuda a <span class="text-indigo-300 font-bold">ser</span>.</p>
+                            
+                            <p>Si sientes que estas misiones resuenan contigo, el libro es tu siguiente nivel. Allí entenderás la alquimia profunda de convertir el miedo en motor y la duda en puente. Porque el mundo no necesita más jefes. Necesita héroes humanos como tú."</p>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-white/10 text-right">
+                            <p class="text-xs text-yellow-500 font-bold font-game">EL MANIFIESTO</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center p-4 bg-white/5 rounded-lg border border-white/5 mb-8">
+                        <p class="text-xs text-slate-400 mb-2">¿Listo para profundizar?</p>
+                        <a href="https://www.google.com/search?q=libro+despierta+al+heroe+que+hay+en+ti+maite+moya" target="_blank" class="inline-flex items-center gap-2 text-indigo-300 hover:text-white font-bold text-sm transition-colors">
+                            <span>Buscar el Libro</span>
+                            <i data-lucide="external-link" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+
+                    ${FOOTER_HTML}
+                </div>
+            `);
+        }
+
         function updateUI() {
             document.getElementById('currentXp').innerText = gameState.xp;
             document.getElementById('userLevel').innerText = Math.floor(gameState.xp / 500) + 1;
@@ -674,7 +729,40 @@
             document.getElementById('statInt').innerText = gameState.stats.Int;
             document.getElementById('statCha').innerText = gameState.stats.Cha;
         }
-        function showHelp() { toggleModal(true, `<div class="text-center"><h2 class="font-game text-xl text-indigo-400 mb-4">Ayuda</h2><div class="text-left space-y-2 text-sm text-slate-300"><p>1. Completa misiones para ganar XP.</p><p>2. Si saltas una, no ganas puntos pero ves la siguiente.</p><p>3. Recupéralas en tu Perfil.</p><p>4. 80% XP para graduarte.</p></div><button onclick="toggleModal(false)" class="mt-6 w-full py-2 bg-indigo-600 text-white rounded font-bold shadow-lg">OK</button></div>`); }
+        function showHelp() {
+            const html = `
+                <div class="text-center">
+                    <h2 class="font-game text-xl text-indigo-400 mb-4">Instrucciones</h2>
+                    <div class="text-left space-y-3 text-sm text-slate-300 mb-8 border-b border-white/10 pb-6">
+                        <p><strong class="text-white">1. Misiones:</strong> Desliza a la <span class="text-green-400">derecha</span> para completar y a la <span class="text-red-400">izquierda</span> para saltar.</p>
+                        <p><strong class="text-white">2. Progresión:</strong> Solo ves 5 misiones a la vez. Al gestionar una, entra otra nueva.</p>
+                        <p><strong class="text-white">3. Segunda Oportunidad:</strong> Las misiones saltadas no dan puntos, pero puedes recuperarlas en tu Perfil.</p>
+                        <p><strong class="text-white">4. Graduación:</strong> Necesitas el 80% de XP total para obtener el diploma de honor.</p>
+                    </div>
+
+                    <div class="text-left space-y-4">
+                        <h3 class="font-game text-lg text-white mb-2 flex items-center gap-2">
+                            <i data-lucide="book-heart" class="w-5 h-5 text-indigo-400"></i>
+                            El Viaje del Héroe
+                        </h3>
+                        <div class="text-sm text-slate-300 italic leading-relaxed space-y-3 bg-white/5 p-4 rounded-xl border border-white/5">
+                            <p>"Querido viajero:</p>
+                            <p>Lo que tienes en tus manos es más que un juego; es un campo de entrenamiento para el alma. En las páginas de <em>'Despierta al héroe que hay en ti'</em>, descubrimos que el liderazgo no es un cargo, sino una actitud ante la vida.</p>
+                            <p>Cada vez que completas una misión aquí, estás reprogramando tu mente para el éxito allá afuera. No busques la perfección en tus respuestas, busca la honestidad en tus acciones. El verdadero héroe no es el que vence siempre, sino el que utiliza su conocimiento al servicio del desarrollo de los otros.</p>
+                            <p>Entiende que en el empoderamiento está el auténtico juego del cambio. Tú ya eres parte de ese cambio. Juega, lee, vive y atrévete a brillar."</p>
+                            <div class="mt-4 text-right">
+                                <p class="font-bold text-indigo-300 not-italic">Dra. Maite Moyá</p>
+                                <p class="text-xs text-slate-500 not-italic">Autora de "Despierta al héroe que hay en ti"</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="toggleModal(false)" class="mt-6 w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/20 transition-all transform active:scale-95">¡Estoy listo!</button>
+                </div>
+            `;
+            toggleModal(true, html);
+            lucide.createIcons();
+        }
         function showToast(msg, type) {
             const t = document.createElement('div');
             t.className = `glass-panel border ${type=='success'?'border-green-500/50 text-green-400':'border-slate-500/50 text-slate-300'} px-4 py-2 rounded-lg shadow-xl flex items-center gap-2 slide-up backdrop-blur-md`;
@@ -692,17 +780,126 @@
             toggleModal(true, `<h3 class="text-xl font-bold text-white mb-2 font-game">${title}</h3><p class="text-slate-300 mb-6 text-sm">${msg}</p><div class="flex justify-end gap-3"><button onclick="toggleModal(false)" class="px-4 py-2 text-slate-400 text-sm hover:text-white transition-colors">Cancelar</button><button id="confBtn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-bold text-sm shadow-lg transition-colors">Confirmar</button></div>`);
             document.getElementById('confBtn').onclick = () => { onConfirm(); toggleModal(false); };
         }
-        const mentorQuotes = { fail: ["Aprende del error.", "Inténtalo de nuevo.", "El fallo es parte del camino."], fear: ["El miedo es normal.", "Hazlo con miedo.", "Valentía es actuar."], tips: ["Escucha más.", "Sonríe siempre.", "Pregunta antes de suponer."] };
-        window.addChat = (t) => {
-            const b = document.getElementById('chatBox');
-            b.insertAdjacentHTML('beforeend', `<div class="self-end max-w-[85%] slide-up mb-2"><span class="bg-white/10 text-white text-xs px-3 py-2 rounded-2xl inline-block backdrop-blur-sm">...</span></div>`);
-            b.scrollTop = b.scrollHeight;
-            setTimeout(() => {
-                b.lastElementChild.remove();
-                b.insertAdjacentHTML('beforeend', `<div class="self-start max-w-[90%] slide-up mb-2"><span class="bg-indigo-900/60 text-indigo-100 text-xs px-3 py-2 rounded-2xl border border-indigo-500/20 backdrop-blur-sm shadow-sm">${mentorQuotes[t][Math.floor(Math.random()*mentorQuotes[t].length)]}</span></div>`);
-                b.scrollTop = b.scrollHeight;
-            }, 600);
+        
+        // --- 1. EXPANDED MENTOR QUOTES (20 EACH) ---
+        const mentorQuotes = { 
+            fail: [
+                "No existen errores, solo resultados y aprendizaje.",
+                "El fracaso es el abono donde crece tu éxito futuro.",
+                "Caerse está permitido, levantarse es obligatorio. ¡Ánimo!",
+                "Si no te equivocas, es que no estás arriesgando lo suficiente.",
+                "La culpa te paraliza; la responsabilidad te moviliza. Elige moverte.",
+                "¿Qué has aprendido de esto? Ese es tu verdadero tesoro.",
+                "Un error admitido es una victoria ganada.",
+                "Tu valor no disminuye porque hoy hayas fallado.",
+                "Recuerda: la perfección es enemiga de lo bueno. Sigue avanzando.",
+                "Hasta los grandes líderes tropiezan. Lo que los define es cómo se levantan.",
+                "Fracasar rápido es aprender rápido. Estás en el camino correcto.",
+                "No te castigues. Sé tu mejor amigo y analiza la situación con calma.",
+                "El dolor del fallo es temporal; la gloria de superarlo es eterna.",
+                "Convierte tu 'No puedo' en un 'No puedo... todavía'.",
+                "Cada fallo te acerca un paso más a la maestría.",
+                "La resiliencia se entrena en los momentos difíciles, no en los fáciles.",
+                "Acepta tu humanidad. Errar es parte del diseño.",
+                "Hoy no salió, mañana es una nueva oportunidad.",
+                "No dejes que un tropiezo defina todo tu viaje.",
+                "Sécate el polvo y sigue. El mundo necesita tu luz."
+            ],
+            fear: [
+                "El miedo es la señal de que estás saliendo de tu zona de confort.",
+                "Hazlo con miedo, pero hazlo.",
+                "La valentía no es la ausencia de miedo, es actuar a pesar de él.",
+                "Tu zona de confort es hermosa, pero allí no crece nada.",
+                "Al otro lado del miedo está la libertad que buscas.",
+                "El miedo es solo una emoción, no una orden. Tú mandas.",
+                "Respira profundo. El miedo se disuelve con la acción.",
+                "¿Qué es lo peor que puede pasar? ¿Y lo mejor? Enfócate en lo mejor.",
+                "Nombra a tu miedo y perderá poder sobre ti.",
+                "El héroe siente el mismo miedo que el cobarde, pero decide actuar.",
+                "No escuches a tu saboteador interno. Escucha a tu propósito.",
+                "La incertidumbre es el terreno de juego de los líderes.",
+                "Confía en tus recursos. Has superado el 100% de tus días malos.",
+                "El miedo intenta protegerte, pero a veces te limita. Agradécele y sigue.",
+                "Visualiza el éxito, no el fracaso. Tu cerebro creerá lo que le digas.",
+                "Un paso pequeño valiente vale más que mil intenciones.",
+                "Recuerda a Alice Herz-Sommer: la actitud es una elección.",
+                "Estás más preparado de lo que crees.",
+                "El miedo es el precio de entrada a una vida extraordinaria.",
+                "Salta y la red aparecerá."
+            ],
+            tips: [
+                "Escuchar es más poderoso que hablar. Usa tus dos oídos.",
+                "Sonreír es la forma más rápida de conectar con alguien.",
+                "Tu cuerpo comunica antes que tus palabras. Revisa tu postura.",
+                "Valida la emoción del otro antes de intentar solucionar su problema.",
+                "Pregunta con curiosidad genuina, no para juzgar.",
+                "Sustituye el 'pero' por el 'y'. Construye puentes, no muros.",
+                "Liderar es servir. ¿A quién puedes ayudar hoy?",
+                "La empatía es ver el mundo con las gafas del otro.",
+                "Sé impecable con tus palabras. No participes en chismes.",
+                "Reconoce el trabajo bien hecho de los demás.",
+                "Pon límites con amor. Decir 'no' a otros es decirte 'sí' a ti.",
+                "La autenticidad conecta más que la perfección.",
+                "Mantén el contacto visual. Dice 'te veo y te respeto'.",
+                "Gestiona tu tiempo: lo urgente no siempre es lo importante.",
+                "La pausa es tu amiga. Respira antes de reaccionar.",
+                "Sé el primero en saludar. Rompe el hielo.",
+                "Agradece lo pequeño. La gratitud es un imán de abundancia.",
+                "Admite tus errores rápido. Genera una confianza inmensa.",
+                "El mapa no es el territorio. Respeta la visión del otro.",
+                "Cuídate a ti mismo para poder cuidar a los demás."
+            ] 
         };
+        
+        // --- 2. UPDATED CHAT LOGIC (Anti-Repeat + User Text) ---
+        const userMessages = {
+            fear: "Siento miedo o dudas...",
+            fail: "He cometido un fallo...",
+            tips: "Necesito un consejo de liderazgo..."
+        };
+
+        window.addChat = (type) => {
+            const box = document.getElementById('chatBox');
+            if(!box) return;
+
+            // 1. Mostrar mensaje del USUARIO (Alineado derecha)
+            const userText = userMessages[type];
+            box.insertAdjacentHTML('beforeend', `<div class="self-end max-w-[85%] slide-up mb-2 text-right"><span class="bg-white/10 text-white text-xs px-3 py-2 rounded-2xl rounded-tr-none inline-block backdrop-blur-sm border border-white/5">${userText}</span></div>`);
+            box.scrollTop = box.scrollHeight;
+
+            // 2. Indicador de "Escribiendo..." (Alineado izquierda)
+            const typingId = 'typing-' + Date.now();
+            box.insertAdjacentHTML('beforeend', `<div id="${typingId}" class="self-start max-w-[85%] slide-up mb-2"><span class="bg-indigo-900/60 text-indigo-100 text-xs px-3 py-2 rounded-2xl rounded-tl-none inline-block border border-indigo-500/20 backdrop-blur-sm shadow-sm flex gap-1 items-center h-8"><span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></span><span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span><span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span></span></div>`);
+            box.scrollTop = box.scrollHeight;
+
+            setTimeout(() => {
+                document.getElementById(typingId).remove();
+                
+                // 3. Selección Anti-Repetición
+                const quotes = mentorQuotes[type];
+                
+                // Inicializar tracking si no existe
+                if (!window.lastQuoteIndices) window.lastQuoteIndices = {};
+                
+                let quoteIndex;
+                let attempts = 0;
+                
+                // Intentar buscar una frase distinta a la última
+                do {
+                    quoteIndex = Math.floor(Math.random() * quotes.length);
+                    attempts++;
+                } while (quotes.length > 1 && quoteIndex === window.lastQuoteIndices[type] && attempts < 5);
+                
+                // Guardar índice usado
+                window.lastQuoteIndices[type] = quoteIndex;
+                const quote = quotes[quoteIndex];
+
+                // 4. Mostrar respuesta del MENTOR (Alineado izquierda)
+                box.insertAdjacentHTML('beforeend', `<div class="self-start max-w-[90%] slide-up mb-2"><span class="bg-indigo-900/80 text-indigo-100 text-xs px-3 py-2 rounded-2xl rounded-tl-none inline-block border border-indigo-500/30 shadow-sm">${quote}</span></div>`);
+                box.scrollTop = box.scrollHeight;
+            }, 800 + Math.random() * 500); // Delay natural
+        };
+
         window.showStatInfo = (k) => { const d = STAT_DEFINITIONS[k]; toggleModal(true, `<div class="text-center"><div class="w-16 h-16 rounded-full bg-white/5 mx-auto flex items-center justify-center mb-4 border-2 ${d.color.replace('text','border')} shadow-lg backdrop-blur-sm"><i data-lucide="${d.icon}" class="w-8 h-8 ${d.color}"></i></div><h3 class="text-xl font-bold text-white mb-1">${d.name}</h3><p class="text-xs ${d.color} uppercase font-bold mb-4 tracking-wider">${d.book_concept}</p><p class="text-slate-300 text-sm italic leading-relaxed">"${d.desc}"</p><div class="flex justify-between items-center bg-white/5 p-3 rounded-lg mt-4 border border-white/5"><span class="text-xs text-slate-400 uppercase font-bold">Nivel Actual</span><span class="text-xl font-bold text-white">${gameState.stats[k]}</span></div><button onclick="toggleModal(false)" class="mt-6 w-full py-2 bg-white/10 hover:bg-white/20 text-white rounded font-bold text-sm transition-colors border border-white/5">Entendido</button></div>`); lucide.createIcons(); };
         function launchConfetti() { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }
 
