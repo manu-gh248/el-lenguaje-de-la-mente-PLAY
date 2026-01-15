@@ -18,7 +18,7 @@
         
         /* Glassmorphism Classes */
         .glass-panel {
-            background: rgba(2, 6, 23, 0.7); /* Más oscuro para contraste con el nuevo fondo */
+            background: rgba(2, 6, 23, 0.7);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -53,26 +53,26 @@
         .stat-box { @apply glass-panel; transition: transform 0.2s; border: 1px solid rgba(255,255,255,0.02); }
         .stat-box:active { transform: scale(0.95); }
 
-        /* NUEVO BACKGROUND: Elegante Teal/Slate */
+        /* Background */
         #bg-pattern {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1;
             overflow: hidden;
-            background: radial-gradient(circle at 50% 110%, #0f766e, #020617 70%); /* Teal-700 to Slate-950 */
+            background: radial-gradient(circle at 50% 110%, #0f766e, #020617 70%);
         }
         .bg-icon {
             position: absolute;
-            opacity: 0.03; /* Muy sutil */
-            color: #ccfbf1; /* Teal muy claro */
+            opacity: 0.03;
+            color: #ccfbf1;
             filter: blur(0.5px);
         }
 
-        /* --- NUEVO DISEÑO SLIDER --- */
+        /* Slider */
         .slider-track {
             position: relative;
             height: 56px;
-            background: rgba(0, 0, 0, 0.5); /* Fondo más oscuro */
+            background: rgba(0, 0, 0, 0.5);
             border-radius: 28px;
             border: 1px solid rgba(255,255,255,0.08);
             box-shadow: inset 0 2px 10px rgba(0,0,0,0.6);
@@ -89,8 +89,8 @@
             height: 48px;
             margin-left: -24px; 
             background: linear-gradient(135deg, #1e293b, #0f172a);
-            border: 1px solid rgba(94, 234, 212, 0.3); /* Borde Teal sutil */
-            box-shadow: 0 0 15px rgba(20, 184, 166, 0.2), 0 4px 6px rgba(0,0,0,0.5); /* Glow Teal */
+            border: 1px solid rgba(94, 234, 212, 0.3);
+            box-shadow: 0 0 15px rgba(20, 184, 166, 0.2), 0 4px 6px rgba(0,0,0,0.5);
             color: #ccfbf1;
             border-radius: 50%;
             display: flex;
@@ -106,31 +106,25 @@
             box-shadow: 0 0 25px rgba(45, 212, 191, 0.4);
             border-color: #5eead4;
         }
-        .slider-knob i {
-            filter: drop-shadow(0 0 2px rgba(45, 212, 191, 0.5));
-        }
+        .slider-knob i { filter: drop-shadow(0 0 2px rgba(45, 212, 191, 0.5)); }
         
         .slider-fill-left {
             position: absolute; top: 0; left: 0; bottom: 0; width: 50%;
-            background: linear-gradient(to right, rgba(225, 29, 72, 0.3), transparent); /* Rose glow */
+            background: linear-gradient(to right, rgba(225, 29, 72, 0.3), transparent);
             opacity: 0; transition: opacity 0.2s;
         }
         .slider-fill-right {
             position: absolute; top: 0; right: 0; bottom: 0; width: 50%;
-            background: linear-gradient(to left, rgba(20, 184, 166, 0.3), transparent); /* Teal glow */
+            background: linear-gradient(to left, rgba(20, 184, 166, 0.3), transparent);
             opacity: 0; transition: opacity 0.2s;
         }
     </style>
 </head>
 <body class="h-[100dvh] flex flex-col max-w-md mx-auto shadow-2xl overflow-hidden relative border-x border-white/5">
 
-    <!-- Dynamic Background -->
     <div id="bg-pattern"></div>
-
-    <!-- Toast Container -->
     <div id="toastContainer" class="fixed top-24 left-4 right-4 z-50 flex flex-col items-center pointer-events-none gap-2"></div>
 
-    <!-- Modal Overlay -->
     <div id="modalOverlay" class="fixed inset-0 bg-slate-950/95 z-50 hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity opacity-0" aria-hidden="true" onclick="if(event.target === this) toggleModal(false)">
         <div id="modalContent" class="glass-panel border-slate-700/50 rounded-2xl p-6 max-w-sm w-full shadow-2xl transform scale-95 transition-all max-h-[85vh] overflow-y-auto custom-scrollbar bg-slate-900/90">
             <div id="dynamicModalBody"></div>
@@ -142,7 +136,6 @@
         <div class="p-4 pb-2">
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <!-- Título con gradiente Teal/Cyan -->
                     <h1 class="font-game text-xl text-transparent bg-clip-text bg-gradient-to-r from-teal-200 via-cyan-300 to-emerald-200 leading-tight drop-shadow-sm tracking-wide">EL LENGUAJE<br>DE LA MENTE</h1>
                     <p class="text-[10px] text-slate-400 flex items-center gap-1 mt-1 uppercase tracking-widest font-bold">
                         <i data-lucide="brain-circuit" class="w-3 h-3 text-teal-400"></i> Nivel <span id="userLevel" class="text-white">1</span>
@@ -213,7 +206,7 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        const APP_VERSION = "4.2.1"; 
+        const APP_VERSION = "4.3.0"; 
         const SAVE_KEY = "lenguajeMente_save_v4";
 
         const STAT_DEFINITIONS = {
@@ -223,20 +216,64 @@
             Mag: { name: "Dominio del Espíritu", archetype_group: "El Mago", desc: "La capacidad de transformar la realidad.", icon: "sparkles", color: "text-purple-400" }
         };
 
+        // --- MENTOR DATA (10 Respuestas únicas por categoría) ---
         const MENTOR_DATA = {
-            judge: ["El Juez busca perfección, pero la perfección no existe.", "Dile al Juez: 'Gracias, pero yo decido ahora'.", "La crítica interna suele ser miedo disfrazado de exigencia."],
-            victim: ["La Víctima pregunta '¿por qué a mí?'. El Héroe pregunta '¿para qué me sirve esto?'.", "No eres lo que te pasa, eres lo que haces con lo que te pasa.", "Responsabilidad es la habilidad de responder."],
-            fear: ["El miedo es solo una emoción, no una profecía.", "Detrás del miedo está el crecimiento que buscas.", "Hazlo con miedo, pero hazlo."],
-            wise: ["Observa tus pensamientos como si fueran nubes pasando.", "Tú no eres tu mente. Tú eres quien escucha a tu mente.", "La consciencia es la luz que disuelve las sombras."]
+            judge: [
+                "El Juez busca perfección, pero la perfección es un espejismo. Busca progreso.",
+                "Dile al Juez: 'Gracias por tu opinión, pero hoy decido yo'. Retoma el mando.",
+                "La crítica interna no es verdad, es miedo disfrazado de exigencia.",
+                "Cuando te juzgas, te haces pequeño. Cuando te aceptas, te vuelves infinito.",
+                "El error no es un crimen, es un dato. Úsalo para calibrar tu brújula.",
+                "¿Le hablarías a tu mejor amigo como te hablas a ti mismo? Cambia el tono.",
+                "La rigidez se rompe; la flexibilidad se adapta. Sé como el agua, no como la roca.",
+                "Tu valor no depende de tus resultados, sino de tu intención.",
+                "Observa el juicio como quien observa una nube pasar. No te subas a esa nube.",
+                "La compasión es el único antídoto real contra la autocrítica destructiva."
+            ],
+            victim: [
+                "La Víctima pregunta '¿por qué a mí?'. El Héroe pregunta '¿para qué me sirve esto?'.",
+                "No eres lo que te pasa, eres lo que decides hacer con lo que te pasa.",
+                "Responsabilidad es la habilidad de responder. Tienes más poder del que crees.",
+                "La queja es una silla mecedora: te mantiene en movimiento pero no te lleva a ningún lado.",
+                "Si culpas a otros de tus problemas, les regalas la llave de tu solución.",
+                "Convierte el 'tengo que' en 'elijo que'. Recupera tu agencia.",
+                "Hasta en la peor tormenta, tú sigues siendo el capitán de tu barco.",
+                "El mundo no te debe nada. Tú te debes todo a ti mismo.",
+                "Sal del asiento del pasajero. Es hora de conducir tu propia vida.",
+                "Tu historia no está escrita en piedra. Tienes el bolígrafo en la mano ahora mismo."
+            ],
+            fear: [
+                "El miedo es solo una emoción, no una profecía de futuro.",
+                "Detrás del muro del miedo suele estar el tesoro de tu crecimiento.",
+                "Hazlo con miedo, pero hazlo. La acción disuelve el terror.",
+                "El miedo es una señal de que algo te importa, no de que debas parar.",
+                "Visualiza el mejor escenario posible, no solo el peor. Tu cerebro cree lo que ve.",
+                "La valentía no es ausencia de miedo, es caminar temblando hacia adelante.",
+                "¿Qué es lo peor que puede pasar? ¿Y si pasa, qué harías? Tienes recursos.",
+                "No dejes que el miedo decida tu menú. Tú eliges qué experiencias comer.",
+                "El miedo te quiere seguro en la cueva. Tu alma te quiere libre en el mundo.",
+                "Respira profundo. El miedo vive en el futuro; la paz vive en el ahora."
+            ],
+            wise: [
+                "Observa tus pensamientos sin casarte con ellos. Tú eres el cielo, no las nubes.",
+                "La consciencia es la luz que disuelve las sombras de los arquetipos.",
+                "Para. Respira. En el silencio encuentras las respuestas que el ruido esconde.",
+                "No eres tu mente. Eres la consciencia que escucha a tu mente.",
+                "La gratitud cambia la química de tu cerebro instantáneamente. Pruébalo.",
+                "El momento presente es el único lugar donde tienes poder real.",
+                "La sabiduría no es saberlo todo, es saber qué hacer con lo que tienes.",
+                "Conecta con tu intención antes de actuar. La intención dirige la energía.",
+                "Eres un ser completo en proceso de recordar su completitud.",
+                "La vida no te sucede a ti, sucede para ti. Busca el aprendizaje oculto."
+            ]
         };
 
-        // --- MISIONES ENRIQUECIDAS ---
+        // Tracker para evitar repeticiones consecutivas
+        const lastChatIndices = { judge: -1, victim: -1, fear: -1, wise: -1 };
+
         const ALL_MISSIONS = [
             { 
-                id: 1, 
-                title: "El Juez vs. El Observador", 
-                villain: "El Juez Interno", 
-                hero: "El Observador", 
+                id: 1, title: "El Juez vs. El Observador", villain: "El Juez Interno", hero: "El Observador", 
                 desc: "Has cometido un error pequeño. De repente, una voz te susurra: 'Siempre haces lo mismo, no sirves para esto'.", 
                 villain_effect: "Te hundes en la culpa. Tu energía baja y te paralizas por miedo a fallar de nuevo.",
                 hero_effect: "Reconoces el dato sin el drama. 'Me equivoqué, aprendo y sigo'. Te sientes ligero y capaz.",
@@ -244,10 +281,7 @@
                 stat: "Sab", xp: 50, color: "border-blue-500/40" 
             },
             { 
-                id: 2, 
-                title: "La Víctima vs. El Protagonista", 
-                villain: "La Víctima", 
-                hero: "El Protagonista", 
+                id: 2, title: "La Víctima vs. El Protagonista", villain: "La Víctima", hero: "El Protagonista", 
                 desc: "Sientes que el mundo es injusto contigo. El tráfico, tu jefe, el clima... todo parece estar en tu contra hoy.", 
                 villain_effect: "Cedes tu poder al entorno. Te sientes impotente y amargado, esperando que alguien te salve.",
                 hero_effect: "Recuperas el control. No puedes cambiar el tráfico, pero sí tu música o tu actitud.",
@@ -255,10 +289,7 @@
                 stat: "Gue", xp: 60, color: "border-red-500/40" 
             },
             { 
-                id: 3, 
-                title: "El Complaciente vs. El Auténtico", 
-                villain: "El Complaciente", 
-                hero: "El Auténtico", 
+                id: 3, title: "El Complaciente vs. El Auténtico", villain: "El Complaciente", hero: "El Auténtico", 
                 desc: "Te piden un favor que no quieres hacer. Sientes un nudo en el estómago, pero estás a punto de decir 'Sí'.", 
                 villain_effect: "Te traicionas a ti mismo. Acumulas resentimiento y cansancio por vivir la vida de otros.",
                 hero_effect: "Tu 'No' protege tu energía sagrada. Te respetas a ti mismo y, paradójicamente, los demás te respetan más.",
@@ -266,10 +297,7 @@
                 stat: "Ama", xp: 70, color: "border-pink-500/40" 
             },
             { 
-                id: 4, 
-                title: "El Perfeccionista vs. El Aprendiz", 
-                villain: "El Perfeccionista", 
-                hero: "El Aprendiz", 
+                id: 4, title: "El Perfeccionista vs. El Aprendiz", villain: "El Perfeccionista", hero: "El Aprendiz", 
                 desc: "Tienes una idea, pero no la lanzas porque 'aún no está lista'. Sigues revisando detalles infinitamente.", 
                 villain_effect: "La parálisis por análisis mata tu sueño. El mundo se pierde tu talento por miedo a la crítica.",
                 hero_effect: "Entiendes que hecho es mejor que perfecto. Aprendes sobre la marcha y avanzas.",
@@ -277,10 +305,7 @@
                 stat: "Mag", xp: 80, color: "border-purple-500/40" 
             },
             { 
-                id: 5, 
-                title: "Etiquetado Mental", 
-                villain: "El Etiquetador", 
-                hero: "El Sabio", 
+                id: 5, title: "Etiquetado Mental", villain: "El Etiquetador", hero: "El Sabio", 
                 desc: "Tras un despiste, te dices: 'Soy un desastre'. Estás convirtiendo un hecho puntual en tu identidad.", 
                 villain_effect: "Te programas para fallar. Tu cerebro busca pruebas para confirmar que 'eres un desastre'.",
                 hero_effect: "Separas tu ser de tu conducta. Eres una persona valiosa que a veces tiene despistes.",
@@ -288,10 +313,7 @@
                 stat: "Sab", xp: 90, color: "border-blue-500/40" 
             },
             { 
-                id: 6, 
-                title: "La Comparación", 
-                villain: "El Envidioso", 
-                hero: "El Inspirado", 
+                id: 6, title: "La Comparación", villain: "El Envidioso", hero: "El Inspirado", 
                 desc: "Ves el éxito de alguien en redes y sientes un pinchazo en el estómago. Te sientes pequeño/a.", 
                 villain_effect: "La envidia es veneno. Te hace creer que el éxito es un recurso limitado y que tú no alcanzas.",
                 hero_effect: "La admiración es medicina. Si esa persona pudo, es la prueba de que es posible para ti.",
@@ -299,10 +321,7 @@
                 stat: "Ama", xp: 85, color: "border-pink-500/40" 
             },
             { 
-                id: 7, 
-                title: "La Catástrofe Futura", 
-                villain: "El Agorero", 
-                hero: "El Presente", 
+                id: 7, title: "La Catástrofe Futura", villain: "El Agorero", hero: "El Presente", 
                 desc: "Tu mente viaja al futuro creando películas de terror sobre cosas que aún no han pasado.", 
                 villain_effect: "Sufres dos veces: una en tu imaginación y otra si ocurre. Vives en ansiedad constante.",
                 hero_effect: "Vuelves al refugio del ahora. Aquí y ahora, estás a salvo y tienes recursos.",
@@ -310,10 +329,7 @@
                 stat: "Mag", xp: 75, color: "border-purple-500/40" 
             },
             { 
-                id: 8, 
-                title: "Poner Límites", 
-                villain: "Miedo al Rechazo", 
-                hero: "El Guerrero", 
+                id: 8, title: "Poner Límites", villain: "Miedo al Rechazo", hero: "El Guerrero", 
                 desc: "Alguien invade tu tiempo o espacio personal. Sientes rabia pero sonríes.", 
                 villain_effect: "Tu cuerpo grita lo que tu boca calla. La rabia no expresada se vuelve contra ti.",
                 hero_effect: "Defines tu territorio. Tus relaciones se vuelven más sanas y honestas.",
@@ -321,10 +337,7 @@
                 stat: "Gue", xp: 100, color: "border-red-500/40" 
             },
             { 
-                id: 9, 
-                title: "Pedir Ayuda", 
-                villain: "El Autosuficiente", 
-                hero: "El Humilde", 
+                id: 9, title: "Pedir Ayuda", villain: "El Autosuficiente", hero: "El Humilde", 
                 desc: "Estás desbordado/a pero crees que pedir ayuda es de débiles. Te cargas todo a la espalda.", 
                 villain_effect: "Te agotas y te aíslas. Niegas a los demás el regalo de contribuir a tu vida.",
                 hero_effect: "Te conectas con tu humanidad. La vulnerabilidad es el puente hacia la conexión real.",
@@ -332,10 +345,7 @@
                 stat: "Ama", xp: 90, color: "border-pink-500/40" 
             },
             { 
-                id: 10, 
-                title: "Celebrar Logros", 
-                villain: "El Exigente", 
-                hero: "El Celebrador", 
+                id: 10, title: "Celebrar Logros", villain: "El Exigente", hero: "El Celebrador", 
                 desc: "Terminas un gran proyecto y, en lugar de alegrarte, ya estás pensando en el siguiente pendiente.", 
                 villain_effect: "Vives en una carrera sin meta. Nada es suficiente nunca, lo que lleva al vacío.",
                 hero_effect: "Llenas tu depósito de dopamina. Celebrar te da energía para el siguiente reto.",
@@ -390,7 +400,16 @@
             }
         }
 
-        const FOOTER_HTML = `<div class="text-center pt-8 pb-24 opacity-30 hover:opacity-60 transition-opacity duration-500 cursor-default select-none"><p class="text-[9px] text-teal-200/50 font-medium tracking-widest">INSPIRED BY "EL LENGUAJE DE LA MENTE"</p></div>`;
+        // --- FOOTER ACTUALIZADO CON VERSIÓN Y CRÉDITO ---
+        const FOOTER_HTML = `
+            <div class="text-center pt-8 pb-24 opacity-40 hover:opacity-80 transition-opacity duration-500 cursor-default select-none space-y-2">
+                <p class="text-[9px] text-teal-200/50 font-medium tracking-widest uppercase">INSPIRED BY "EL LENGUAJE DE LA MENTE"</p>
+                <p class="flex items-center justify-center gap-1 text-[9px] text-slate-500 font-light">
+                    Made with <i data-lucide="heart" class="w-3 h-3 text-red-400 fill-red-400 animate-pulse"></i> by the Liderapia team for you
+                </p>
+                <p class="text-[8px] text-slate-700 font-mono">v${APP_VERSION}</p>
+            </div>
+        `;
 
         function initGame() {
             generateBackground();
@@ -418,28 +437,23 @@
         function saveGame() { localStorage.setItem(SAVE_KEY, JSON.stringify(gameState)); updateUI(); }
         function getMissionById(id) { return ALL_MISSIONS.find(m => m.id === id); }
 
-        // --- NUEVA LÓGICA DE INFO MODAL ---
         function showMissionDetails(id) {
             const m = getMissionById(id);
             const html = `
                 <div class="text-left font-sans">
-                    <!-- Cabecera Emotiva -->
                     <div class="text-center mb-6">
                         <span class="text-[10px] uppercase font-bold tracking-[0.3em] text-teal-500/60 block mb-2">Análisis del Conflicto</span>
                         <h3 class="text-2xl font-bold text-white leading-tight font-game mb-2">${m.title}</h3>
                         <div class="h-0.5 w-12 bg-teal-500/30 mx-auto rounded-full"></div>
                     </div>
 
-                    <!-- Contexto Narrativo -->
                     <div class="bg-slate-900/40 p-5 rounded-2xl border border-white/5 mb-6 shadow-inner">
                         <p class="text-slate-300 text-sm leading-relaxed font-serif italic text-center">"${m.desc}"</p>
                     </div>
                     
                     <h4 class="text-xs font-bold text-center text-slate-400 uppercase tracking-widest mb-4">La Encrucijada</h4>
 
-                    <!-- Las Dos Rutas (Visualmente Impactante) -->
                     <div class="space-y-4 mb-8">
-                        <!-- Ruta Villano (Izquierda) -->
                         <div class="relative overflow-hidden group">
                             <div class="absolute inset-0 bg-gradient-to-r from-red-900/20 to-transparent opacity-50 group-hover:opacity-70 transition-opacity"></div>
                             <div class="border-l-4 border-red-500/50 bg-slate-900/40 p-4 rounded-r-xl relative z-10">
@@ -451,7 +465,6 @@
                             </div>
                         </div>
 
-                        <!-- Ruta Héroe (Derecha) -->
                         <div class="relative overflow-hidden group">
                             <div class="absolute inset-0 bg-gradient-to-l from-teal-900/20 to-transparent opacity-50 group-hover:opacity-70 transition-opacity"></div>
                             <div class="border-r-4 border-teal-500/50 bg-slate-900/40 p-4 rounded-l-xl text-right relative z-10">
@@ -464,7 +477,6 @@
                         </div>
                     </div>
 
-                    <!-- Call to Action -->
                     <div class="text-center mb-6">
                         <p class="text-xs text-slate-400 mb-2">Para activar al Héroe:</p>
                         <p class="text-teal-200 font-bold text-sm bg-teal-500/10 py-3 px-4 rounded-xl border border-teal-500/20 inline-block shadow-[0_0_15px_rgba(20,184,166,0.1)]">
@@ -580,16 +592,13 @@
 
             gameState.activeIds.forEach((id, idx) => {
                 const m = getMissionById(id);
-                // Layout Mejorado: Botón Info Integrado en Header
                 const html = `
                     <div class="card p-0 mb-6 border-l-4 ${m.color} fade-in relative overflow-hidden" style="animation-delay: ${idx * 100}ms">
                         <div class="p-6 pb-2">
-                            <!-- Header Fila 1: Tipología y XP -->
                             <div class="flex justify-between items-center mb-3">
                                 <span class="text-[9px] font-bold uppercase text-slate-400 tracking-[0.15em] bg-black/30 px-2 py-1 rounded border border-white/5">${m.villain} vs ${m.hero}</span>
                                 <div class="flex items-center gap-2">
                                     <div class="text-[10px] font-bold text-teal-300 bg-teal-500/10 px-2 py-1 rounded border border-teal-500/20 shadow-[0_0_10px_rgba(20,184,166,0.1)]">+${m.xp} XP</div>
-                                    <!-- Botón Info Integrado -->
                                     <button onclick="showMissionDetails(${m.id})" class="text-slate-500 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-lg">
                                         <i data-lucide="info" class="w-4 h-4"></i>
                                     </button>
@@ -600,7 +609,6 @@
                             <p class="text-sm text-slate-300/80 leading-relaxed font-light">${m.desc}</p>
                         </div>
 
-                        <!-- SLIDER -->
                         <div class="w-full px-5 pb-6 pt-2">
                             <div class="slider-track" id="slider-${m.id}">
                                 <div class="slider-fill-left"></div>
@@ -753,12 +761,24 @@
             document.getElementById('rankBadge').innerText = currentRank.title;
         }
 
+        // --- LÓGICA DE CHAT MENTOR MEJORADA (Anti-repetición) ---
         window.addChat = (type) => {
             const box = document.getElementById('chatBox');
             const messages = MENTOR_DATA[type];
-            const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+            
+            // Selección anti-repetición: Asegura que no salga el mismo mensaje seguido
+            let idx;
+            do {
+                idx = Math.floor(Math.random() * messages.length);
+            } while (messages.length > 1 && idx === lastChatIndices[type]);
+            
+            lastChatIndices[type] = idx; // Guardar índice usado
+            const randomMsg = messages[idx];
+
             const userLabels = {judge: "Siento mucha autocrítica...", victim: "Me siento impotente...", fear: "Tengo miedo...", wise: "Necesito perspectiva..."};
+            
             box.insertAdjacentHTML('beforeend', `<div class="self-end max-w-[85%] slide-up mb-2 text-right"><span class="bg-white/10 text-white text-xs px-4 py-3 rounded-2xl rounded-tr-none inline-block backdrop-blur-sm border border-white/10">${userLabels[type]}</span></div>`);
+            
             setTimeout(() => {
                 box.insertAdjacentHTML('beforeend', `<div class="self-start max-w-[90%] slide-up mb-2"><span class="bg-indigo-500/20 text-indigo-100 text-xs px-4 py-3 rounded-2xl rounded-tl-none inline-block border border-indigo-500/20 shadow-sm leading-relaxed">${randomMsg}</span></div>`);
                 box.scrollTop = box.scrollHeight;
