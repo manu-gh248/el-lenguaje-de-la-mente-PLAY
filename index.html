@@ -8,13 +8,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Iconos -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Confetti JS -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap');
         
-        /* Usar 100dvh para móviles evita problemas con la barra de direcciones */
         body { font-family: 'Roboto', sans-serif; background-color: #0f172a; color: #e2e8f0; height: 100dvh; }
         .font-game { font-family: 'Orbitron', sans-serif; }
-        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; transition: transform 0.2s; }
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; transition: all 0.2s; }
         .card:active { transform: scale(0.98); }
         .btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
         .btn-secondary { background: #334155; }
@@ -26,65 +27,70 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* Custom Scrollbar for profile history */
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        
+        .stat-box:active { transform: scale(0.95); background-color: rgba(30, 41, 59, 0.8); }
     </style>
 </head>
 <body class="h-[100dvh] flex flex-col max-w-md mx-auto shadow-2xl overflow-hidden relative bg-slate-900">
 
-    <!-- Toast Notification Container (Fixed Top) -->
-    <div id="toastContainer" class="fixed top-4 left-4 right-4 z-50 flex flex-col items-center pointer-events-none gap-2"></div>
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-16 left-4 right-4 z-50 flex flex-col items-center pointer-events-none gap-2"></div>
 
-    <!-- Custom Modal Overlay (Hidden by default) -->
-    <div id="modalOverlay" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity opacity-0" aria-hidden="true">
-        <div id="modalContent" class="bg-slate-800 border border-slate-600 rounded-xl p-6 max-w-sm w-full shadow-2xl transform scale-95 transition-all">
-            <h3 id="modalTitle" class="text-xl font-bold text-white mb-2 font-game">Confirmar</h3>
-            <p id="modalMessage" class="text-slate-300 mb-6 text-sm leading-relaxed">¿Estás seguro?</p>
-            <div class="flex justify-end space-x-3">
-                <button id="modalCancelBtn" class="px-4 py-2 rounded text-slate-400 hover:text-white text-sm font-medium hover:bg-slate-700 transition-colors">Cancelar</button>
-                <button id="modalConfirmBtn" class="px-5 py-2 rounded bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-500 shadow-lg shadow-indigo-500/30 transition-all transform hover:-translate-y-0.5">Confirmar</button>
-            </div>
+    <!-- Modal Overlay -->
+    <div id="modalOverlay" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4 backdrop-blur-md transition-opacity opacity-0" aria-hidden="true" onclick="if(event.target === this) toggleModal(false)">
+        <div id="modalContent" class="bg-slate-800 border border-slate-600 rounded-xl p-6 max-w-sm w-full shadow-2xl transform scale-95 transition-all max-h-[85vh] overflow-y-auto custom-scrollbar">
+            <div id="dynamicModalBody"></div>
         </div>
     </div>
 
-    <!-- Header / Stats Bar -->
-    <header class="bg-slate-900/95 backdrop-blur p-4 border-b border-slate-700 z-10 flex-none">
-        <div class="flex justify-between items-center mb-3">
+    <!-- Header -->
+    <header class="bg-slate-900/95 backdrop-blur p-4 border-b border-slate-700 z-10 flex-none relative">
+        <div class="flex justify-between items-start mb-3">
             <div>
-                <h1 class="font-game text-xl text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">HERO'S AWAKENING</h1>
-                <p class="text-xs text-slate-400 flex items-center gap-1">
-                    <i data-lucide="shield" class="w-3 h-3"></i> Nivel <span id="userLevel" class="text-white font-bold">1</span> • <span id="userTitle">Novato</span>
+                <h1 class="font-game text-lg text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 leading-tight">HERO'S AWAKENING</h1>
+                <p class="text-xs text-slate-400 flex items-center gap-1 mt-1">
+                    <i data-lucide="shield" class="w-3 h-3"></i> Nivel <span id="userLevel" class="text-white font-bold">1</span>
+                    <span id="rankBadge" class="ml-2 px-2 py-0.5 rounded bg-slate-800 text-[10px] border border-slate-700">Novato</span>
                 </p>
             </div>
-            <div class="text-right">
-                <div class="text-[10px] text-yellow-400 font-bold uppercase tracking-wider mb-1">Experiencia</div>
-                <div class="w-28 h-3 bg-slate-800 rounded-full border border-slate-700 relative overflow-hidden">
-                    <div id="xpBar" class="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 rounded-full transition-all duration-500" style="width: 0%"></div>
-                    <div class="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white drop-shadow-md">
-                        <span id="currentXp">0</span> / <span id="nextLevelXp">500</span>
-                    </div>
+            
+            <div class="flex items-center gap-3">
+                <button onclick="showHelp()" class="p-2 bg-slate-800 rounded-full hover:bg-slate-700 text-indigo-400 border border-slate-700 transition-colors">
+                    <i data-lucide="help-circle" class="w-5 h-5"></i>
+                </button>
+                <div class="text-right">
+                    <div class="text-[9px] text-yellow-400 font-bold uppercase tracking-wider mb-1">XP Total</div>
+                    <div class="text-lg font-game text-white leading-none" id="currentXp">0</div>
                 </div>
             </div>
         </div>
+
         <!-- Stats Grid -->
         <div class="grid grid-cols-4 gap-2 text-center text-xs">
-            <div class="bg-slate-800/50 p-2 rounded border border-slate-700/50"><span class="block text-red-400 font-bold text-sm" id="statStr">0</span>Fuerza</div>
-            <div class="bg-slate-800/50 p-2 rounded border border-slate-700/50"><span class="block text-green-400 font-bold text-sm" id="statAgi">0</span>Agilidad</div>
-            <div class="bg-slate-800/50 p-2 rounded border border-slate-700/50"><span class="block text-blue-400 font-bold text-sm" id="statInt">0</span>Intel.</div>
-            <div class="bg-slate-800/50 p-2 rounded border border-slate-700/50"><span class="block text-purple-400 font-bold text-sm" id="statCha">0</span>Carisma</div>
+            <div onclick="showStatInfo('Str')" class="stat-box bg-slate-800/50 p-2 rounded border border-slate-700/50 cursor-pointer hover:bg-slate-700 transition-colors select-none">
+                <span class="block text-red-400 font-bold text-sm" id="statStr">0</span>Fuerza
+            </div>
+            <div onclick="showStatInfo('Agi')" class="stat-box bg-slate-800/50 p-2 rounded border border-slate-700/50 cursor-pointer hover:bg-slate-700 transition-colors select-none">
+                <span class="block text-green-400 font-bold text-sm" id="statAgi">0</span>Agilidad
+            </div>
+            <div onclick="showStatInfo('Int')" class="stat-box bg-slate-800/50 p-2 rounded border border-slate-700/50 cursor-pointer hover:bg-slate-700 transition-colors select-none">
+                <span class="block text-blue-400 font-bold text-sm" id="statInt">0</span>Intel.
+            </div>
+            <div onclick="showStatInfo('Cha')" class="stat-box bg-slate-800/50 p-2 rounded border border-slate-700/50 cursor-pointer hover:bg-slate-700 transition-colors select-none">
+                <span class="block text-purple-400 font-bold text-sm" id="statCha">0</span>Carisma
+            </div>
         </div>
     </header>
 
-    <!-- Main Content Area -->
-    <!-- 'flex-1' para ocupar el espacio restante y 'pb-32' para padding de seguridad -->
-    <main class="flex-1 overflow-y-auto p-4 space-y-6 scroll-smooth" id="appContent">
-        <!-- Se inyecta contenido dinámicamente aquí -->
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-4 space-y-6 scroll-smooth pb-32" id="appContent">
+        <!-- Content injected via JS -->
     </main>
 
     <!-- Navigation -->
-    <!-- 'absolute' en lugar de 'fixed' relativo al contenedor body -->
     <nav class="bg-slate-900/95 backdrop-blur p-2 pb-6 pt-3 border-t border-slate-700 absolute bottom-0 w-full z-20 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
         <div class="flex justify-around">
             <button onclick="renderMissions()" class="nav-btn flex flex-col items-center text-indigo-400 p-2 rounded-lg transition-all active:scale-95 group">
@@ -104,379 +110,547 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // --- DATA & STATE ---
-        const GAME_DATA = {
-            missions: [
-                { id: 1, title: "El Espejo de la Verdad", ref: "Capítulo 2", desc: "Mírate al espejo y di en voz alta 3 fortalezas tuyas. Escríbelas después.", type: "daily", xp: 100, stat: "Cha", color: "border-purple-500", text_color: "text-purple-400" },
-                { id: 2, title: "Caza de Villanos: La Queja", ref: "Capítulo 6", desc: "Detecta a alguien quejándose. Escucha 2 min sin juzgar y retírate amablemente.", type: "combat", xp: 150, stat: "Str", color: "border-red-500", text_color: "text-red-400" },
-                { id: 3, title: "Diálogo Interno", ref: "Capítulo 5", desc: "Identifica un pensamiento negativo ('no puedo') y cámbialo por uno positivo ('voy a intentar').", type: "mental", xp: 120, stat: "Int", color: "border-blue-500", text_color: "text-blue-400" },
-                { id: 4, title: "Observador Silencioso", ref: "Capítulo 3", desc: "En una reunión o cena, escucha el doble de lo que hables.", type: "stealth", xp: 200, stat: "Agi", color: "border-green-500", text_color: "text-green-400" },
-                { id: 5, title: "Saluda con Propósito", ref: "Capítulo 4", desc: "Saluda a 3 desconocidos o compañeros con los que no sueles hablar. Sonríe genuinamente.", type: "daily", xp: 130, stat: "Cha", color: "border-yellow-500", text_color: "text-yellow-400" },
-                { id: 6, title: "No Supongas", ref: "Capítulo 6", desc: "Si dudas de la intención de alguien, pregúntale directamente en lugar de suponer.", type: "mental", xp: 140, stat: "Int", color: "border-indigo-500", text_color: "text-indigo-400" }
-            ],
-            mentorQuotes: {
-                fail: [ 
-                    "Recuerda el axioma del Cap. 6: No hay errores, solo aprendizaje. ¿Qué te ha enseñado esto?",
-                    "Fracaso + Triunfo = Aprendizaje. Acéptalo, analízalo y sigue. No te estanques en la culpa.",
-                    "El héroe no es quien siempre gana, es quien siempre se levanta. Revisa tu estrategia.",
-                    "Si no te equivocas, es que no estás saliendo de tu zona de confort. ¡Bien hecho por intentarlo!",
-                    "Tu 'villano interior' (el ego) quiere que te rindas por vergüenza. No le des ese gusto.",
-                    "Analiza la situación como un observador externo (Tercera persona). ¿Qué le aconsejarías a un amigo que falló en esto?",
-                    "Hasta el Capitán Sully fue cuestionado al principio. Confía en tu instinto y sigue practicando.",
-                    "La resiliencia es el músculo que estás entrenando ahora mismo. Duele porque está creciendo.",
-                    "No te fustigues. La culpa paraliza, la responsabilidad moviliza. ¿Qué harás diferente la próxima vez?",
-                    "El éxito es ir de fracaso en fracaso sin perder el entusiasmo. ¡Arriba ese ánimo, héroe!",
-                    "Como dice Maite: 'No importa cuán difíciles sean las circunstancias, siempre tienes la libertad de elegir cómo respondes'."
-                ],
-                fear: [ 
-                    "El miedo es la señal inequívoca de que estás saliendo de tu zona de confort. ¡Es una buena señal!",
-                    "Hazlo con miedo, pero hazlo. Tu héroe interior te espera justo al otro lado de esa barrera.",
-                    "Recuerda a Alice Herz-Sommer: ella elegía ver lo bueno incluso en un campo de concentración. Tú eliges tu actitud hoy.",
-                    "El miedo escénico es normal (90% lo sufre). Transforma esa adrenalina en pasión por tu mensaje.",
-                    "No escuches a los 'villanos' externos que te dicen 'eso no tiene salida'. Escucha a tu propósito.",
-                    "La valentía no es la ausencia de miedo, es la capacidad de actuar a pesar de él.",
-                    "Tu diálogo interno define tu realidad. ¿Qué te estás diciendo ahora mismo? ¿Te limitas o te potencias?",
-                    "Visualiza el éxito con detalle. Tu cerebro no distingue entre realidad e imaginación vívida.",
-                    "Estás en el 'punto de no retorno' del viaje del héroe. Solo queda ir hacia adelante con confianza.",
-                    "¿Qué es lo peor que puede pasar? ¿Y lo mejor? Generalmente, lo mejor pesa más.",
-                    "La incertidumbre es el terreno de juego del líder. Respira hondo y da el primer paso."
-                ],
-                tips: [ 
-                    "Regla de oro de la comunicación: Escuchar, Preguntar, Hablar. En ese orden estricto.",
-                    "Somos animales sociales. Busca siempre lo que te une al otro (valores), no lo que te separa.",
-                    "Tu cuerpo comunica antes que tu boca. Revisa tu postura: hombros atrás, mirada al frente.",
-                    "La empatía es tu arma más poderosa. Intenta ver el mundo desde las gafas de tu interlocutor.",
-                    "Liderar es servir. Pregúntate: ¿A quién puedo ayudar o inspirar hoy?",
-                    "Una palabra dicha a destiempo puede romper una relación. Pausa antes de reaccionar emocionalmente.",
-                    "La autenticidad conecta más que la perfección. No temas mostrarte humano.",
-                    "Si quieres ser interesante, interésate primero genuinamente por los demás.",
-                    "El mapa no es el territorio. Abre tu mente a otras perspectivas sin juzgarlas de inmediato.",
-                    "La perseverancia vence al talento cuando el talento no se esfuerza. Sigue picando piedra.",
-                    "Prioriza: No todo es urgente. Enfócate en lo que te acerca a tu propósito (Cap. 7)."
-                ]
-            }
+        // --- 1. CONFIGURATION & DATA ---
+        const APP_VERSION = "2.2.0"; 
+        
+        const STAT_DEFINITIONS = {
+            Str: { name: "El Pilar Interior", book_concept: "Autoestima y Límites", desc: "Imagina tu autoestima como tu columna vertebral. Esta fuerza no golpea; sostiene. Es la valentía serena de decir 'No' cuando algo atenta contra tus valores. Es protegerte de los 'vampiros de energía' sin volverte agresivo.", icon: "shield-alert", color: "text-red-400" },
+            Agi: { name: "El Baile Social", book_concept: "Adaptabilidad y Escucha", desc: "La vida es un baile impredecible. La Agilidad no es rapidez, es ritmo. Es la capacidad de escuchar el doble de lo que hablas. Es entender que el mapa no es el territorio: cada persona ve el mundo distinto.", icon: "wind", color: "text-green-400" },
+            Int: { name: "El Observador", book_concept: "Gestión Emocional", desc: "Tienes un narrador en tu cabeza que a veces miente. Esta estadística es tu 'Observador Consciente'. Es la habilidad de pillar a ese saboteador interno y reescribir el guion. Es entender que el miedo no es un stop, sino una señal.", icon: "brain-circuit", color: "text-blue-400" },
+            Cha: { name: "Luz Propia", book_concept: "Liderazgo y Conexión", desc: "El verdadero carisma no es deslumbrar, sino hacer que los demás se sientan importantes. No es una máscara, es autenticidad radical. Liderar no es mandar, es servir e inspirar.", icon: "sparkles", color: "text-purple-400" }
         };
 
-        let gameState = JSON.parse(localStorage.getItem('heroRPG_save')) || {
+        const generateMissions = () => {
+            const missions = [
+                // FASE 1: AUTOCONCIENCIA
+                { id: 1, title: "El Espejo", desc: "Mírate al espejo y di 3 fortalezas en voz alta.", stat: "Int", xp: 50, type: "daily", ref: "Cap. 2",
+                  story: "Tu reflejo suele ser el primero en recibir tus críticas. Hoy cambiaremos el guion. Mírate a los ojos, no a tus defectos, y reconoce quién eres realmente.",
+                  book_context: "La autoconciencia es el cimiento del líder. Si no reconoces tu propio valor, nadie más lo hará por ti." },
+
+                { id: 2, title: "Valores Nucleares", desc: "Escribe tus 5 valores principales.", stat: "Int", xp: 100, type: "mental", ref: "Cap. 2",
+                  story: "Un héroe sin brújula está perdido en la tormenta. Tus valores son esa brújula. ¿Qué es innegociable para ti? Defínelo para no perderte.",
+                  book_context: "El liderazgo auténtico nace de la coherencia entre lo que piensas, lo que sientes y lo que haces." },
+
+                { id: 3, title: "Inventario de Miedos", desc: "Ponle nombre a tu miedo de hoy.", stat: "Int", xp: 80, type: "mental", ref: "Cap. 1",
+                  story: "El miedo es una sombra: solo asusta cuando no la miras de frente. Al ponerle nombre ('tengo miedo a fallar'), le quitas su poder de monstruo.",
+                  book_context: "Identificar el miedo es el primer paso para transformarlo en un aliado que te indica dónde debes crecer." },
+
+                { id: 4, title: "Zona de Confort", desc: "Haz algo pequeño que te de pereza.", stat: "Str", xp: 120, type: "combat", ref: "Cap. 1",
+                  story: "La comodidad es un sofá muy agradable, pero nada crece allí. Hoy, da un pequeño paso fuera. Ese cosquilleo en el estómago es la señal de que estás vivo.",
+                  book_context: "El héroe nace justo donde termina tu zona de confort. No necesitas grandes gestos, solo movimiento constante." },
+
+                { id: 5, title: "Postura de Poder", desc: "Mantén una postura erguida 10 min.", stat: "Cha", xp: 60, type: "daily", ref: "Cap. 2",
+                  story: "Tu cuerpo le habla a tu mente. Si te encoges, te sientes pequeño. Si te yergues, tu cerebro recibe la señal de 'estoy listo'. Ocupa tu espacio.",
+                  book_context: "La comunicación no verbal empieza contigo mismo. Tu fisiología determina tu psicología." },
+
+                { id: 6, title: "Sin Quejas", desc: "3 horas sin quejarte de nada.", stat: "Int", xp: 100, type: "stealth", ref: "Cap. 6",
+                  story: "La queja es como una silla mecedora: te mantiene en movimiento pero no te lleva a ningún lado. Hoy, bájate de la silla y actúa o acepta.",
+                  book_context: "Los 'vampiros de energía' se alimentan de la queja. Cortar ese ciclo es vital para mantener tu liderazgo." },
+
+                { id: 7, title: "La Gratitud", desc: "Agradece algo genuinamente a alguien.", stat: "Cha", xp: 70, type: "social", ref: "Cap. 3",
+                  story: "Damos por hecho lo extraordinario. Hoy detente, observa a alguien que te ayude y dile 'gracias' mirándole a los ojos. Es magia pura.",
+                  book_context: "La gratitud conecta personas y desarma barreras. Es la habilidad social más rentable y menos utilizada." },
+
+                { id: 8, title: "El Observador", desc: "Describe tu entorno solo con hechos.", stat: "Agi", xp: 90, type: "mental", ref: "Cap. 3",
+                  story: "Tu mente es una máquina de juzgar: 'esto es feo', 'aquello es aburrido'. Apaga el juez. Sé una cámara de vídeo. Solo registra hechos.",
+                  book_context: "Separar los hechos de las interpretaciones es clave para la Inteligencia Social y evita conflictos innecesarios." },
+
+                { id: 9, title: "Detectar Juicios", desc: "Píllate juzgando y detente.", stat: "Int", xp: 110, type: "stealth", ref: "Cap. 6",
+                  story: "El juicio es un muro que construyes entre tú y los demás. Hoy, cuando pienses mal de alguien, detente y di: 'Es solo mi mapa, no su territorio'.",
+                  book_context: "Para liderar personas diferentes a ti, debes suspender el juicio y activar la curiosidad." },
+
+                { id: 10, title: "Tu Propósito", desc: "Define tu objetivo del mes en una frase.", stat: "Str", xp: 100, type: "mental", ref: "Cap. 7",
+                  story: "Quien no sabe a dónde va, acaba en cualquier parte. Enfoca tu láser mental. Una sola frase, un solo norte. Eso te da poder.",
+                  book_context: "La claridad precede al éxito. El líder define el destino antes de empezar a caminar." },
+
+                // FASE 2: HABILIDADES SOCIALES
+                { id: 11, title: "Escucha Radical", desc: "5 min escuchando sin interrumpir.", stat: "Agi", xp: 150, type: "social", ref: "Cap. 3",
+                  story: "Normalmente escuchamos esperando el turno para hablar. Hoy no. Hoy escucha para entender. Calla tu diálogo interno y regala tu presencia.",
+                  book_context: "Escuchar es la habilidad más difícil y valiosa. No se trata de oír palabras, sino de captar emociones." },
+
+                { id: 12, title: "El Saludo", desc: "Saluda sonriendo a 3 desconocidos.", stat: "Cha", xp: 120, type: "social", ref: "Cap. 4",
+                  story: "Un 'buenos días' genuino puede cambiar el día de alguien. Sé tú quien inicie la chispa de humanidad en un mundo de pantallas.",
+                  book_context: "El líder da el primer paso en la conexión social. Romper el hielo demuestra seguridad y calidez." },
+
+                { id: 13, title: "Contacto Visual", desc: "Mira a los ojos al hablar.", stat: "Cha", xp: 80, type: "social", ref: "Cap. 4",
+                  story: "Los ojos son el puente. Si miras al suelo, te escondes. Si miras al móvil, te desconectas. Mira al otro y dile sin palabras: 'Te veo'.",
+                  book_context: "El contacto visual genera oxitocina y confianza. Es la base biológica de la conexión humana." },
+
+                { id: 14, title: "Preguntar Primero", desc: "Haz 3 preguntas antes de opinar.", stat: "Agi", xp: 130, type: "social", ref: "Cap. 3",
+                  story: "Tu opinión puede esperar. La historia del otro es un tesoro por descubrir. Pregunta con curiosidad de niño y verás cómo se abren las puertas.",
+                  book_context: "Interesarse por los demás es el secreto para ser interesante. Cambia el 'yo digo' por el 'cuéntame más'." },
+
+                { id: 15, title: "Recordar Nombres", desc: "Usa el nombre de tu interlocutor.", stat: "Cha", xp: 90, type: "social", ref: "Cap. 3",
+                  story: "El sonido más dulce para una persona es su propio nombre. Úsalo con respeto y verás cómo la distancia entre vosotros desaparece.",
+                  book_context: "Personalizar la comunicación demuestra que el otro te importa, no como recurso, sino como ser humano." },
+
+                { id: 16, title: "Lenguaje Positivo", desc: "Sustituye 'pero' por 'y'.", stat: "Int", xp: 140, type: "mental", ref: "Cap. 5",
+                  story: "El 'pero' borra todo lo anterior ('Te quiero, pero...'). El 'y' suma ('Te quiero y me gustaría...'). Hoy sé un arquitecto que construye puentes, no muros.",
+                  book_context: "Las palabras crean realidades. Un lenguaje inclusivo y positivo transforma conflictos en colaboraciones." },
+
+                { id: 17, title: "Validar Emociones", desc: "Di 'Entiendo cómo te sientes'.", stat: "Agi", xp: 110, type: "social", ref: "Cap. 4",
+                  story: "No trates de arreglarlo todo. A veces, la gente solo necesita sentirse comprendida. Validar su emoción es como darles un abrazo verbal.",
+                  book_context: "La empatía no es estar de acuerdo, es comprender la emoción ajena. Es el pegamento de cualquier equipo." },
+
+                { id: 18, title: "El Silencio", desc: "Pausa 3 segundos antes de responder.", stat: "Str", xp: 100, type: "mental", ref: "Cap. 5",
+                  story: "En la pausa vive tu libertad. Reaccionar es instintivo; responder es humano. Tómate 3 segundos para elegir ser tu mejor versión.",
+                  book_context: "El silencio es una herramienta de poder. Demuestra reflexión y control sobre la impulsividad." },
+
+                { id: 19, title: "Tono de Voz", desc: "Analiza tu tono en un audio.", stat: "Cha", xp: 80, type: "daily", ref: "Cap. 4",
+                  story: "No es lo que dices, es cómo lo dices. Tu voz tiene música. ¿Es una marcha militar o una melodía acogedora? Escúchate desde fuera.",
+                  book_context: "El paralenguaje (tono, volumen) transmite más información emocional que las propias palabras." },
+
+                { id: 20, title: "Feedback", desc: "Pide una cosa a mejorar a alguien.", stat: "Str", xp: 160, type: "combat", ref: "Cap. 3",
+                  story: "El ego quiere oír halagos. El héroe quiere la verdad. Preguntar '¿en qué puedo mejorar?' requiere valentía, pero acelera tu crecimiento x10.",
+                  book_context: "La retroalimentación es el desayuno de los campeones. Sin espejos externos, no vemos nuestras 'manchas'." },
+
+                // FASE 3: BARRERAS
+                { id: 21, title: "Decir NO", desc: "Rechaza una petición amablemente.", stat: "Str", xp: 200, type: "combat", ref: "Cap. 6",
+                  story: "Cada vez que dices 'Sí' por compromiso, te estás diciendo 'No' a ti mismo. Hoy, pon un límite con amor. Tu tiempo es sagrado.",
+                  book_context: "La asertividad es la capacidad de respetar tus derechos sin pisotear los de los demás." },
+
+                { id: 22, title: "Reconocer Error", desc: "Admite un fallo sin excusas.", stat: "Str", xp: 180, type: "combat", ref: "Cap. 6",
+                  story: "Las excusas son para las víctimas. Los líderes dicen 'Me equivoqué, lo arreglo'. Esa vulnerabilidad te hace increíblemente fuerte y confiable.",
+                  book_context: "La responsabilidad radical elimina el drama y enfoca la energía en la solución." },
+
+                { id: 23, title: "Evitar Rumores", desc: "No participes en chismes.", stat: "Str", xp: 150, type: "stealth", ref: "Cap. 5",
+                  story: "Hablar de otros es fácil. Hablar de ideas es grande. Hoy, cuando empiece el chisme, sé el guardián de la dignidad y cambia el tema.",
+                  book_context: "La impecabilidad en tus palabras genera un entorno de confianza y seguridad psicológica." },
+
+                { id: 24, title: "Pedir Ayuda", desc: "Solicita ayuda en algo.", stat: "Agi", xp: 120, type: "social", ref: "Cap. 2",
+                  story: "El mito del héroe solitario es falso. Superman tiene a la Liga de la Justicia. Pedir ayuda no es debilidad, es inteligencia colaborativa.",
+                  book_context: "Reconocer tus límites permite que otros brillen con sus fortalezas. Eso es delegar y empoderar." },
+
+                { id: 25, title: "Hablar en Público", desc: "Da tu opinión en un grupo.", stat: "Cha", xp: 170, type: "combat", ref: "Cap. 6",
+                  story: "Tu voz importa. Ese miedo en la garganta es solo energía acumulada. Suéltala. Al compartir tu idea, enriqueces al mundo.",
+                  book_context: "Vencer el miedo escénico es crucial. Si no comunicas tu valor, el mundo se lo pierde." },
+
+                { id: 26, title: "No Supongas", desc: "Pregunta '¿A qué te refieres?'.", stat: "Int", xp: 130, type: "mental", ref: "Cap. 6",
+                  story: "El 90% de los conflictos son películas que nos montamos. Deja de ser guionista de dramas y conviértete en periodista: pregunta y verifica.",
+                  book_context: "Las suposiciones son termitas para las relaciones. La claridad es el antídoto." },
+
+                { id: 27, title: "Cortar al Vampiro", desc: "Cierra charla con alguien que se queja.", stat: "Str", xp: 190, type: "combat", ref: "Cap. 6",
+                  story: "Tu energía es limitada. No dejes que nadie la use de basurero emocional. Con elegancia, di 'Hablemos de soluciones' o retírate.",
+                  book_context: "Proteger tu entorno emocional es responsabilidad tuya. Rodéate de personas que sumen." },
+
+                { id: 28, title: "La Sonrisa", desc: "Sonríe al hablar por teléfono.", stat: "Cha", xp: 60, type: "daily", ref: "Cap. 4",
+                  story: "La sonrisa se escucha. Cambia la química de tu cerebro y relaja al interlocutor, aunque no te vea. Es tu tarjeta de visita auditiva.",
+                  book_context: "Las neuronas espejo funcionan incluso a distancia. Tu estado emocional es contagioso." },
+
+                { id: 29, title: "Vestimenta", desc: "Vístete hoy un poco mejor.", stat: "Cha", xp: 70, type: "daily", ref: "Cap. 4",
+                  story: "No es vanidad, es respeto hacia ti y hacia la ocasión. Cuando te ves bien, te sientes capaz. Vístete para el héroe que quieres ser.",
+                  book_context: "Tu imagen es comunicación. Asegúrate de que lo que ven coincida con tu valía interior." },
+
+                { id: 30, title: "Puntualidad", desc: "Llega 5 min antes.", stat: "Str", xp: 80, type: "daily", ref: "Cap. 7",
+                  story: "El tiempo es el recurso más valioso. Llegar a tiempo es decir 'Te respeto'. Llegar tarde es robar vida. Hoy, regala respeto.",
+                  book_context: "La gestión del tiempo es gestión de vida. La puntualidad habla de tu fiabilidad y compromiso." },
+
+                // FASE 4: LIDERAZGO
+                { id: 31, title: "Delegar", desc: "Asigna una tarea confiando.", stat: "Agi", xp: 140, type: "social", ref: "Cap. 8",
+                  story: "Querer hacerlo todo tú es el techo de tu crecimiento. Suelta el control. Confiar en otro es el mayor regalo que le puedes hacer.",
+                  book_context: "El líder no crea seguidores, crea más líderes. Delegar es la herramienta para ello." },
+
+                { id: 32, title: "Motivar", desc: "Reconoce un buen trabajo.", stat: "Cha", xp: 130, type: "social", ref: "Cap. 8",
+                  story: "La gente olvida lo que dices, pero no cómo les haces sentir. Hoy sé un cazador de talentos: busca algo bueno que alguien hizo y dilo.",
+                  book_context: "El reconocimiento es combustible emocional. Aumenta el rendimiento y la lealtad." },
+
+                { id: 33, title: "Priorizar", desc: "Haz lo importante, no lo urgente.", stat: "Str", xp: 110, type: "mental", ref: "Cap. 7",
+                  story: "Estar ocupado no es ser productivo. Para un momento la rueda del hámster. Elige UNA cosa que realmente mueva la aguja y hazla.",
+                  book_context: "La matriz de Eisenhower: diferenciar urgente de importante es vital para la eficacia." },
+
+                { id: 34, title: "Decisión Rápida", desc: "Decide algo trivial en 10 seg.", stat: "Agi", xp: 90, type: "mental", ref: "Cap. 8",
+                  story: "La duda paraliza. Entrena tu músculo de decisión con cosas pequeñas (qué comer, qué ver). Acción imperfecta mejor que inacción perfecta.",
+                  book_context: "La parálisis por análisis mata oportunidades. El líder toma decisiones y asume consecuencias." },
+
+                { id: 35, title: "Adaptabilidad", desc: "Ante un fallo, busca solución.", stat: "Agi", xp: 150, type: "combat", ref: "Cap. 8",
+                  story: "El plan A falló. ¿Y qué? El abecedario tiene 26 letras más. No te estanques en el 'por qué pasó', salta al 'cómo lo arreglamos'.",
+                  book_context: "La resiliencia y la flexibilidad son las competencias clave en un entorno cambiante." },
+
+                { id: 36, title: "Inspirar", desc: "Comparte una idea útil.", stat: "Cha", xp: 100, type: "social", ref: "Cap. 8",
+                  story: "El conocimiento guardado se pudre; compartido se multiplica. Sé un río, no un embalse. Comparte algo que te inspiró hoy.",
+                  book_context: "Liderar es servir. Tu conocimiento debe estar al servicio del desarrollo de los otros." },
+
+                { id: 37, title: "Autocuidado", desc: "20 min para ti.", stat: "Str", xp: 100, type: "daily", ref: "Cap. 7",
+                  story: "No puedes servir agua de un vaso vacío. Cuidarte no es egoísta, es estratégico. Recarga tu batería para poder iluminar a otros.",
+                  book_context: "El bienestar del líder es prerrequisito para el bienestar del equipo." },
+
+                { id: 38, title: "Networking", desc: "Saluda a un antiguo contacto.", stat: "Cha", xp: 140, type: "social", ref: "Cap. 3",
+                  story: "Las oportunidades vienen de las personas. Planta semillas antes de tener hambre. Un simple '¿Cómo estás?' reactiva puentes.",
+                  book_context: "Somos seres sociales. Tu red de contactos es tu red de seguridad y crecimiento." },
+
+                { id: 39, title: "Resolver Conflicto", desc: "Aborda un tema pendiente.", stat: "Str", xp: 200, type: "combat", ref: "Cap. 6",
+                  story: "Esa conversación difícil es como una herida sin limpiar. Duele, pero hay que curarla. Habla desde el corazón y busca la paz.",
+                  book_context: "El conflicto no gestionado se enquista. Abordarlo con asertividad y empatía es sanador." },
+
+                { id: 40, title: "La Pausa", desc: "Para 5 min a respirar.", stat: "Int", xp: 70, type: "daily", ref: "Cap. 7",
+                  story: "En la vorágine, parar es un acto revolucionario. Desconecta el piloto automático. Vuelve a tu cuerpo. Respira. Ahora sigue.",
+                  book_context: "El mindfulness o atención plena reduce el estrés y mejora la toma de decisiones." },
+
+                // FASE 5: MAESTRÍA
+                { id: 41, title: "Mentoría", desc: "Enseña algo a alguien.", stat: "Cha", xp: 160, type: "social", ref: "Cap. 8",
+                  story: "Hoy tú eres el maestro. Pasa la antorcha. Al enseñar, aprendes dos veces y dejas un legado en la otra persona.",
+                  book_context: "El ciclo del héroe se completa cuando compartes el elixir del conocimiento con tu comunidad." },
+
+                { id: 42, title: "Cero Excusas", desc: "Un día sin excusas.", stat: "Str", xp: 180, type: "combat", ref: "Cap. 6",
+                  story: "Es fácil culpar al tráfico, al jefe o al tiempo. Hoy sé dueño radical de tus circunstancias. Si algo no sale, asúmelo y avanza.",
+                  book_context: "La víctima culpa; el líder se responsabiliza. Ese cambio de mentalidad lo es todo." },
+
+                { id: 43, title: "Empatía Profunda", desc: "Pregunta: '¿Qué necesitas?'.", stat: "Agi", xp: 170, type: "social", ref: "Cap. 2",
+                  story: "A veces amamos mal, dando lo que queremos dar y no lo que el otro necesita. Hoy haz la pregunta mágica y escucha la respuesta.",
+                  book_context: "La empatía cognitiva y emocional nos permite conectar con la realidad del otro, no con nuestra proyección." },
+
+                { id: 44, title: "Visión", desc: "Visualiza tu éxito 5 min.", stat: "Int", xp: 90, type: "mental", ref: "Cap. 7",
+                  story: "Tu cerebro no distingue entre realidad e imaginación vívida. Crea el recuerdo del futuro. Si puedes verlo, puedes construirlo.",
+                  book_context: "La visualización prepara neuronalmente al cerebro para ejecutar las competencias necesarias." },
+
+                { id: 45, title: "Asertividad II", desc: "Expresa una necesidad tuya.", stat: "Str", xp: 150, type: "combat", ref: "Cap. 5",
+                  story: "Nadie lee mentes. Si necesitas apoyo, espacio o cariño, pídelo claramente. Ser fuerte también es mostrar tu necesidad.",
+                  book_context: "La comunicación clara de necesidades previene resentimientos y malos entendidos." },
+
+                { id: 46, title: "Lectura Corporal", desc: "Adivina una emoción.", stat: "Agi", xp: 100, type: "stealth", ref: "Cap. 4",
+                  story: "Fíjate en los hombros, en el ceño, en las manos. El cuerpo grita lo que la boca calla. Sé un detective de emociones.",
+                  book_context: "Más del 60% de la comunicación es no verbal. Aprender a leerla te da una ventaja enorme." },
+
+                { id: 47, title: "El Elogio", desc: "Elogia a espaldas de alguien.", stat: "Cha", xp: 130, type: "social", ref: "Cap. 3",
+                  story: "Hablar bien de alguien cuando no está es la forma más pura de lealtad. Esas palabras siempre llegan a su destino y brillan más.",
+                  book_context: "Construir una reputación de integridad y positividad atrae a las mejores personas a tu lado." },
+
+                { id: 48, title: "Desconexión", desc: "1 hora sin móvil.", stat: "Int", xp: 110, type: "daily", ref: "Cap. 7",
+                  story: "Rompe las cadenas digitales. Mira el cielo, no la pantalla. Recupera tu atención, que es tu activo más valioso.",
+                  book_context: "La hiperconexión erosiona la capacidad de reflexión profunda y presencia, claves del liderazgo." },
+
+                { id: 49, title: "Ruptura de Patrón", desc: "Haz algo diferente hoy.", stat: "Agi", xp: 120, type: "mental", ref: "Cap. 8",
+                  story: "Si buscas resultados distintos, no hagas lo mismo. Lávate los dientes con la otra mano, cambia la ruta. Despierta a tu cerebro.",
+                  book_context: "La flexibilidad neuronal se entrena con la novedad. Un líder ágil abraza el cambio." },
+
+                { id: 50, title: "El Salto", desc: "Haz esa llamada pendiente.", stat: "Str", xp: 200, type: "combat", ref: "Cap. 6",
+                  story: "Esa tarea que evitas es la puerta a tu siguiente nivel. Respira hondo, cuenta 3, 2, 1... y salta. Al otro lado está tu héroe.",
+                  book_context: "La acción masiva cura el miedo. El final de este viaje es solo el principio de tu nueva vida." }
+            ];
+            
+            return missions.map(m => {
+                if(m.stat === 'Str') { m.color = "border-red-500"; m.text_color = "text-red-400"; m.bg_btn = "bg-red-500/10 hover:bg-red-500/20 text-red-400"; }
+                if(m.stat === 'Agi') { m.color = "border-green-500"; m.text_color = "text-green-400"; m.bg_btn = "bg-green-500/10 hover:bg-green-500/20 text-green-400"; }
+                if(m.stat === 'Int') { m.color = "border-blue-500"; m.text_color = "text-blue-400"; m.bg_btn = "bg-blue-500/10 hover:bg-blue-500/20 text-blue-400"; }
+                if(m.stat === 'Cha') { m.color = "border-purple-500"; m.text_color = "text-purple-400"; m.bg_btn = "bg-purple-500/10 hover:bg-purple-500/20 text-purple-400"; }
+                return m;
+            });
+        };
+
+        const ALL_MISSIONS = generateMissions();
+        const TOTAL_MAX_XP = ALL_MISSIONS.reduce((sum, m) => sum + m.xp, 0);
+
+        // --- 2. STATE MANAGEMENT ---
+        let gameState = {
+            version: APP_VERSION,
             xp: 0,
             level: 1,
-            stats: { Str: 1, Agi: 1, Int: 1, Cha: 1 },
-            completedMissions: [],
-            lastLogin: new Date().toDateString()
+            stats: { Str: 0, Agi: 0, Int: 0, Cha: 0 },
+            pendingIds: [], 
+            activeIds: [],
+            completedIds: [], 
+            skippedIds: []
         };
 
-        // --- COMMON FOOTER ---
-        const FOOTER_HTML = `
-            <div class="text-center pt-8 pb-32 opacity-30 hover:opacity-80 transition-opacity duration-500 cursor-default select-none">
-                <p class="text-[9px] text-slate-500 font-game mb-1 tracking-widest">v1.0.0-beta</p>
-                <p class="text-[9px] text-slate-600 font-medium">Derechos reservados Liderapia y Dra. Maite Moyá 2026</p>
-            </div>
-        `;
-
-        // --- UI UTILS (MODAL & TOAST) ---
-        
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            
-            const bgClass = type === 'success' ? 'bg-green-600' : (type === 'levelup' ? 'bg-yellow-600' : 'bg-red-600');
-            const icon = type === 'success' ? 'check-circle' : (type === 'levelup' ? 'trophy' : 'alert-circle');
-
-            toast.className = `${bgClass} text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 min-w-[300px] slide-up pointer-events-auto border border-white/10`;
-            toast.innerHTML = `
-                <i data-lucide="${icon}" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="text-sm font-bold">${message}</span>
-            `;
-            
-            container.appendChild(toast);
-            lucide.createIcons();
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-10px)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        function toggleModal(show) {
-            const overlay = document.getElementById('modalOverlay');
-            const content = document.getElementById('modalContent');
-            
-            if (show) {
-                overlay.classList.remove('hidden');
-                setTimeout(() => {
-                    overlay.classList.remove('opacity-0');
-                    content.classList.remove('scale-95');
-                    content.classList.add('scale-100');
-                }, 10);
+        function initGame() {
+            const saved = localStorage.getItem('heroRPG_v2_save');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if(parsed.version === APP_VERSION) {
+                    gameState = parsed;
+                } else {
+                    setupNewGame();
+                }
             } else {
-                overlay.classList.add('opacity-0');
-                content.classList.remove('scale-100');
-                content.classList.add('scale-95');
-                setTimeout(() => overlay.classList.add('hidden'), 200);
+                setupNewGame();
             }
+            updateUI();
+            renderView();
         }
 
-        function showConfirmation(title, message, onConfirm) {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalMessage').innerText = message;
-            
-            const confirmBtn = document.getElementById('modalConfirmBtn');
-            const cancelBtn = document.getElementById('modalCancelBtn');
-
-            const newConfirm = confirmBtn.cloneNode(true);
-            const newCancel = cancelBtn.cloneNode(true);
-            confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
-            cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
-
-            newConfirm.onclick = () => {
-                onConfirm();
-                toggleModal(false);
-            };
-
-            newCancel.onclick = () => {
-                toggleModal(false);
-            };
-
-            toggleModal(true);
+        function setupNewGame() {
+            const allIds = ALL_MISSIONS.map(m => m.id);
+            gameState.activeIds = allIds.slice(0, 5);
+            gameState.pendingIds = allIds.slice(5);
+            gameState.xp = 0;
+            gameState.level = 1;
+            gameState.stats = { Str: 1, Agi: 1, Int: 1, Cha: 1 };
+            gameState.completedIds = [];
+            gameState.skippedIds = [];
+            saveGame();
         }
-
-        // --- CORE FUNCTIONS ---
 
         function saveGame() {
-            localStorage.setItem('heroRPG_save', JSON.stringify(gameState));
+            localStorage.setItem('heroRPG_v2_save', JSON.stringify(gameState));
             updateUI();
         }
 
-        function updateUI() {
-            const nextLevel = gameState.level * 500;
-            const percentage = (gameState.xp / nextLevel) * 100;
+        // --- 3. MISSION LOGIC & MODALS ---
 
-            document.getElementById('userLevel').innerText = gameState.level;
-            document.getElementById('currentXp').innerText = gameState.xp;
-            document.getElementById('nextLevelXp').innerText = nextLevel;
-            document.getElementById('xpBar').style.width = `${Math.min(percentage, 100)}%`;
+        function getMissionById(id) {
+            return ALL_MISSIONS.find(m => m.id === id);
+        }
+
+        // NUEVA FUNCIÓN: MOSTRAR DETALLES DE MISIÓN
+        function showMissionDetails(id) {
+            const m = getMissionById(id);
+            const html = `
+                <div class="text-left">
+                    <div class="flex items-center gap-3 mb-4 border-b border-slate-700 pb-3">
+                        <div class="p-2 rounded-lg bg-slate-700 ${m.text_color}">
+                            <i data-lucide="book-open" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">${m.ref}</span>
+                            <h3 class="text-xl font-bold text-white leading-tight">${m.title}</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6 space-y-4">
+                        <div class="bg-slate-900/50 p-4 rounded-lg border-l-2 ${m.color.replace('border', 'border-l')}">
+                            <h4 class="text-xs uppercase text-slate-500 font-bold mb-1">La Historia</h4>
+                            <p class="text-slate-200 text-sm leading-relaxed italic">"${m.story}"</p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-xs uppercase text-indigo-400 font-bold mb-1 flex items-center gap-1">
+                                <i data-lucide="graduation-cap" class="w-3 h-3"></i> Sabiduría del Libro
+                            </h4>
+                            <p class="text-slate-400 text-sm leading-relaxed">${m.book_context}</p>
+                        </div>
+                    </div>
+
+                    <button onclick="toggleModal(false)" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white rounded font-bold transition-colors">Volver a la Aventura</button>
+                </div>
+            `;
+            toggleModal(true, html);
+            lucide.createIcons();
+        }
+
+        function completeMission(id) {
+            const mission = getMissionById(id);
+            if (!mission) return;
+            showConfirmation("¿Misión Cumplida?", `"${mission.title}": Confirma honestamente que la has realizado.`, () => {
+                gameState.xp += mission.xp;
+                if (gameState.stats[mission.stat]) gameState.stats[mission.stat]++;
+                gameState.activeIds = gameState.activeIds.filter(mid => mid !== id);
+                gameState.completedIds.push({ id: id, date: new Date().toLocaleDateString() });
+                replenishActiveMissions();
+                showToast(`¡Bien hecho! +${mission.xp} XP`, 'success');
+                saveGame();
+                checkGraduation();
+                renderView();
+            });
+        }
+
+        function skipMission(id) {
+            showConfirmation("¿Saltar Misión?", "Irá a 'Saltadas'. Podrás recuperarla en tu Perfil.", () => {
+                gameState.activeIds = gameState.activeIds.filter(mid => mid !== id);
+                gameState.skippedIds.push(id);
+                replenishActiveMissions();
+                showToast("Misión pospuesta", "neutral");
+                saveGame();
+                checkGraduation();
+                renderView();
+            });
+        }
+
+        function replenishActiveMissions() {
+            if (gameState.activeIds.length < 5 && gameState.pendingIds.length > 0) {
+                gameState.activeIds.push(gameState.pendingIds.shift());
+            }
+        }
+
+        function recoverSkipped(id) {
+            gameState.skippedIds = gameState.skippedIds.filter(sid => sid !== id);
+            gameState.pendingIds.unshift(id);
+            replenishActiveMissions();
+            showToast("Misión recuperada", "success");
+            saveGame();
+            renderView();
+        }
+
+        // --- 4. GRADUATION & UI ---
+        function checkGraduation() {
+            if (gameState.pendingIds.length === 0 && gameState.activeIds.length === 0) {
+                setTimeout(showGraduationModal, 1000);
+            }
+        }
+
+        function showGraduationModal() {
+            const scorePercent = (gameState.xp / TOTAL_MAX_XP) * 100;
+            let title = "", badge = "", msg = "", color = "", grad = false;
+
+            if (scorePercent < 80) {
+                title = "INTENTO INCOMPLETO"; badge = "Aspirante"; color = "text-slate-400";
+                msg = "Tu puntuación es baja (<80%). Un verdadero héroe no se rinde. Recupera las misiones saltadas.";
+                grad = false;
+            } else if (scorePercent < 90) {
+                title = "HÉROE CONSCIENTE"; badge = "Bronce"; color = "text-amber-600";
+                msg = "Has despertado. Sigue practicando para elevar tu influencia.";
+                grad = true;
+            } else if (scorePercent < 96) {
+                title = "LÍDER AUTÉNTICO"; badge = "Plata"; color = "text-slate-300";
+                msg = "Tu compromiso es notable. Lideras con el ejemplo.";
+                grad = true;
+            } else {
+                title = "AGENTE DEL CAMBIO"; badge = "Oro"; color = "text-yellow-400";
+                msg = "¡Extraordinario! Has alcanzado la maestría. 'Tú ya eres parte de ese cambio'.";
+                grad = true;
+            }
+
+            if (grad) launchConfetti();
+
+            const html = `
+                <div class="text-center">
+                    <div class="w-24 h-24 rounded-full bg-slate-900 mx-auto flex items-center justify-center mb-4 border-4 border-slate-700 relative overflow-hidden">
+                        <i data-lucide="award" class="w-12 h-12 ${color} relative z-10"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold font-game mb-1 ${color}">${title}</h2>
+                    <p class="text-xs uppercase font-bold text-slate-500 mb-4">Puntuación: ${Math.floor(scorePercent)}%</p>
+                    <div class="bg-slate-900 p-4 rounded-lg mb-6 border border-slate-700 text-sm text-slate-300">"${msg}"</div>
+                    ${!grad ? `<button onclick="toggleModal(false); currentView='profile'; renderView();" class="w-full py-3 bg-slate-700 text-white rounded font-bold">Recuperar Misiones</button>` : 
+                    `<button onclick="if(confirm('¿Reiniciar?')){ localStorage.clear(); location.reload(); }" class="w-full py-3 btn-primary text-white rounded font-bold">Reiniciar Viaje</button>`}
+                </div>
+            `;
+            toggleModal(true, html);
+            lucide.createIcons();
+        }
+
+        let currentView = 'missions'; 
+        
+        function renderView() {
+            // Nav State
+            document.querySelectorAll('.nav-btn').forEach((btn, idx) => {
+                const active = (idx === 0 && currentView === 'missions') || (idx === 1 && currentView === 'mentor') || (idx === 2 && currentView === 'profile');
+                btn.className = `nav-btn flex flex-col items-center p-2 rounded-lg transition-all active:scale-95 group ${active ? 'text-indigo-400' : 'text-slate-400'}`;
+                btn.querySelector('div').className = `p-1 rounded transition ${active ? 'bg-slate-800' : 'group-hover:bg-slate-800'}`;
+            });
+
+            const c = document.getElementById('appContent');
+            c.innerHTML = ''; 
+            if (currentView === 'missions') renderMissionsView(c);
+            if (currentView === 'mentor') renderMentorView(c);
+            if (currentView === 'profile') renderProfileView(c);
+            lucide.createIcons();
+        }
+
+        function renderMissionsView(c) {
+            c.insertAdjacentHTML('beforeend', `<div class="flex justify-between mb-4 fade-in"><div><h2 class="font-game text-lg text-white">Misiones Activas</h2><span class="text-xs text-slate-400">Cola: <b>${gameState.pendingIds.length}</b></span></div></div>`);
             
-            const titles = ["Novato", "Aprendiz", "Explorador", "Guerrero", "Líder", "Héroe"];
-            const titleIndex = Math.min(gameState.level - 1, titles.length - 1);
-            document.getElementById('userTitle').innerText = titles[titleIndex];
+            if (gameState.activeIds.length === 0 && gameState.pendingIds.length === 0) {
+                c.insertAdjacentHTML('beforeend', `<div class="text-center p-10 border-2 border-dashed border-slate-700 rounded-xl mt-10"><h3 class="text-white font-bold">¡Sin Misiones!</h3><button onclick="checkGraduation()" class="mt-4 px-4 py-2 bg-yellow-600 text-white rounded text-sm">Ver Graduación</button></div>`);
+                return;
+            }
 
+            gameState.activeIds.forEach((id, idx) => {
+                const m = getMissionById(id);
+                const html = `
+                    <div class="card p-5 mb-4 border-l-4 ${m.color} fade-in" style="animation-delay: ${idx * 50}ms">
+                        <div class="flex justify-between items-start">
+                            <div><span class="text-[10px] font-bold uppercase ${m.text_color} mb-1 block">${m.ref}</span><h3 class="font-bold text-white text-lg">${m.title}</h3></div>
+                            <div class="bg-slate-900/50 px-2 py-1 rounded text-xs text-yellow-500 font-bold border border-yellow-500/20 ml-2">+${m.xp} XP</div>
+                        </div>
+                        <p class="text-sm text-slate-300 mt-2 line-clamp-2">${m.desc}</p>
+                        
+                        <!-- BOTÓN DE INFO AÑADIDO -->
+                        <div class="mt-3 mb-4">
+                            <button onclick="showMissionDetails(${m.id})" class="text-xs font-bold ${m.text_color} flex items-center hover:underline">
+                                <i data-lucide="info" class="w-3 h-3 mr-1"></i> Leer más sobre esto
+                            </button>
+                        </div>
+
+                        <div class="flex gap-2 pt-3 border-t border-slate-700/50">
+                            <button onclick="skipMission(${m.id})" class="flex-1 py-2 rounded text-xs font-bold text-slate-400 border border-slate-700 hover:bg-slate-800">Saltar</button>
+                            <button onclick="completeMission(${m.id})" class="flex-[2] btn-primary py-2 rounded text-xs font-bold text-white shadow-lg shadow-indigo-500/20">Completar</button>
+                        </div>
+                    </div>`;
+                c.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function renderProfileView(c) {
+            const completed = gameState.completedIds.length, skipped = gameState.skippedIds.length, total = ALL_MISSIONS.length;
+            const prog = Math.round((completed / total) * 100);
+            
+            c.insertAdjacentHTML('beforeend', `
+                <div class="fade-in">
+                    <h2 class="font-game text-lg mb-4 text-white">Tu Progreso</h2>
+                    <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-xl mb-6">
+                        <div class="flex justify-between mb-2"><span class="text-slate-400 text-xs font-bold uppercase">Completado</span><span class="text-white font-bold text-xl">${prog}%</span></div>
+                        <div class="w-full h-3 bg-slate-900 rounded-full border border-slate-700 mb-4 overflow-hidden"><div class="h-full bg-indigo-500" style="width: ${prog}%"></div></div>
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs divide-x divide-slate-700">
+                            <div><span class="block text-green-400 font-bold text-lg">${completed}</span>Hechas</div>
+                            <div><span class="block text-red-400 font-bold text-lg">${skipped}</span>Saltadas</div>
+                            <div><span class="block text-slate-400 font-bold text-lg">${gameState.pendingIds.length + gameState.activeIds.length}</span>Restan</div>
+                        </div>
+                    </div>
+                    ${skipped > 0 ? `<h3 class="text-white font-bold mb-3 text-sm text-red-400">Recuperar Saltadas</h3><div class="space-y-2 mb-8">${gameState.skippedIds.map(id => {
+                        const m = getMissionById(id);
+                        return `<div class="bg-slate-800 p-3 rounded flex justify-between items-center border border-red-900/30"><span class="text-sm text-slate-300 truncate mr-2">${m.title}</span><button onclick="recoverSkipped(${m.id})" class="px-3 py-1 bg-slate-700 text-white text-[10px] font-bold rounded">Recuperar</button></div>`
+                    }).join('')}</div>` : ''}
+                    <h3 class="text-white font-bold mb-3 text-sm opacity-80">Historial</h3>
+                    <div class="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar">${completed === 0 ? '<p class="text-slate-500 text-sm italic">Sin historial.</p>' : gameState.completedIds.slice().reverse().map(o => `<div class="bg-slate-800/50 p-2 rounded flex justify-between text-xs text-slate-400 border border-slate-700/50"><span>${getMissionById(o.id).title}</span><span>${o.date}</span></div>`).join('')}</div>
+                    <div class="mt-8 text-center"><button onclick="if(confirm('¿Borrar?')){localStorage.removeItem('heroRPG_v2_save'); location.reload();}" class="text-red-400/60 text-xs font-bold hover:text-red-400">Reiniciar Progreso</button></div>
+                    <div class="text-center pt-8 pb-32 opacity-30"><p class="text-[9px] text-slate-500 font-game">v${APP_VERSION}</p><p class="text-[9px] text-slate-600">Liderapia © 2026</p></div>
+                </div>
+            `);
+        }
+
+        function renderMentorView(c) {
+            c.insertAdjacentHTML('beforeend', `
+                <div class="text-center mb-6 fade-in"><div class="w-16 h-16 bg-slate-800 rounded-full mx-auto flex items-center justify-center border-2 border-indigo-500/30 mb-2"><i data-lucide="sparkles" class="w-6 h-6 text-indigo-300"></i></div><h2 class="font-game text-xl text-white">Mentor</h2></div>
+                <div id="chatBox" class="bg-slate-800/80 rounded-xl p-4 h-[350px] overflow-y-auto mb-4 border border-slate-700 flex flex-col gap-3 custom-scrollbar"><div class="self-start max-w-[85%]"><span class="bg-indigo-900/80 text-indigo-100 text-sm px-4 py-2 rounded-2xl rounded-tl-sm inline-block border border-indigo-500/30">¿En qué puedo ayudarte?</span></div></div>
+                <div class="grid grid-cols-2 gap-3 fade-in"><button onclick="addChat('fear')" class="btn-secondary p-3 rounded text-xs font-bold text-slate-300">Miedo</button><button onclick="addChat('fail')" class="btn-secondary p-3 rounded text-xs font-bold text-slate-300">Fallo</button><button onclick="addChat('tips')" class="btn-secondary col-span-2 p-3 rounded text-xs font-bold text-indigo-300">Consejo</button></div>
+                <div class="h-8"></div>
+            `);
+        }
+
+        // Helpers
+        window.renderMissions = () => { currentView = 'missions'; renderView(); };
+        window.renderMentor = () => { currentView = 'mentor'; renderView(); };
+        window.renderProfile = () => { currentView = 'profile'; renderView(); };
+        function updateUI() {
+            document.getElementById('currentXp').innerText = gameState.xp;
+            document.getElementById('userLevel').innerText = Math.floor(gameState.xp / 500) + 1;
             document.getElementById('statStr').innerText = gameState.stats.Str;
             document.getElementById('statAgi').innerText = gameState.stats.Agi;
             document.getElementById('statInt').innerText = gameState.stats.Int;
             document.getElementById('statCha').innerText = gameState.stats.Cha;
-
-            if (gameState.xp >= nextLevel) {
-                gameState.level++;
-                gameState.xp = gameState.xp - nextLevel;
-                showToast(`¡NIVEL ${gameState.level} ALCANZADO!`, 'levelup');
-                saveGame();
-            }
         }
-
-        function completeMission(id) {
-            const mission = GAME_DATA.missions.find(m => m.id === id);
-            if (!mission) return;
-
-            showConfirmation(
-                "¿Completar Misión?", 
-                `Confirma con honestidad que has cumplido: "${mission.title}". El héroe no se engaña a sí mismo.`,
-                () => {
-                    gameState.xp += mission.xp;
-                    if(gameState.stats[mission.stat] !== undefined) {
-                        gameState.stats[mission.stat] += 1;
-                    }
-                    gameState.completedMissions.push({id: id, date: new Date().toDateString()});
-                    
-                    showToast(`¡Misión Cumplida! +${mission.xp} XP y +1 ${mission.stat}`);
-                    saveGame();
-                    renderMissions();
-                }
-            );
-        }
-
-        // --- RENDERING ---
-
-        function renderMissions() {
-            const container = document.getElementById('appContent');
-            container.innerHTML = `
-                <div class="flex items-center gap-2 mb-4 fade-in">
-                    <h2 class="font-game text-lg text-white">Misiones Disponibles</h2>
-                    <span class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">Hoy</span>
-                </div>
-            `;
-
-            GAME_DATA.missions.forEach((mission, index) => {
-                const completedToday = gameState.completedMissions.some(cm => cm.id === mission.id && cm.date === new Date().toDateString());
-                
-                const card = document.createElement('div');
-                card.className = `card p-5 mb-4 border-l-4 ${mission.color} ${completedToday ? 'opacity-50 grayscale' : 'hover:shadow-lg shadow-md'} relative overflow-hidden fade-in`;
-                card.style.animationDelay = `${index * 100}ms`;
-                
-                card.innerHTML = `
-                    <div class="absolute top-0 right-0 p-2 opacity-10">
-                        <i data-lucide="${completedToday ? 'check-circle' : 'target'}" class="w-24 h-24"></i>
-                    </div>
-                    <div class="flex justify-between items-start relative z-10">
-                        <div>
-                            <span class="text-[10px] font-bold uppercase tracking-widest ${mission.text_color} mb-1 block">${mission.ref}</span>
-                            <h3 class="font-bold text-white text-lg leading-tight">${mission.title}</h3>
-                        </div>
-                        <div class="bg-slate-900/80 backdrop-blur px-2 py-1 rounded text-xs text-yellow-500 font-bold border border-yellow-500/20 whitespace-nowrap ml-2">+${mission.xp} XP</div>
-                    </div>
-                    <p class="text-sm text-slate-300 mt-3 leading-relaxed relative z-10">${mission.desc}</p>
-                    <div class="mt-4 flex justify-between items-center relative z-10 pt-3 border-t border-slate-700/50">
-                        <div class="flex items-center text-xs text-slate-400 font-medium">
-                            <i data-lucide="zap" class="w-3 h-3 mr-1 ${mission.text_color}"></i>
-                            +1 ${mission.stat}
-                        </div>
-                        ${completedToday 
-                            ? '<span class="text-green-500 text-sm font-bold flex items-center bg-green-500/10 px-3 py-1 rounded-full"><i data-lucide="check" class="w-4 h-4 mr-1"></i> Completada</span>' 
-                            : `<button onclick="completeMission(${mission.id})" class="btn-primary px-5 py-2 rounded-lg text-sm font-bold text-white hover:opacity-90 hover:shadow-lg hover:shadow-indigo-500/40 transition-all active:scale-95">Completar</button>`
-                        }
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-            
-            // Añadir Footer al final
-            const footer = document.createElement('div');
-            footer.innerHTML = FOOTER_HTML;
-            container.appendChild(footer);
-            
+        function showHelp() { toggleModal(true, `<div class="text-center"><h2 class="font-game text-xl text-indigo-400 mb-4">Ayuda</h2><div class="text-left space-y-2 text-sm text-slate-300"><p>1. Completa misiones para ganar XP.</p><p>2. Si saltas una, no ganas puntos pero ves la siguiente.</p><p>3. Recupéralas en tu Perfil.</p><p>4. 80% XP para graduarte.</p></div><button onclick="toggleModal(false)" class="mt-6 w-full py-2 bg-indigo-600 text-white rounded font-bold">OK</button></div>`); }
+        function showToast(msg, type) {
+            const t = document.createElement('div');
+            t.className = `bg-slate-800 border ${type=='success'?'border-green-500 text-green-400':'border-slate-500 text-slate-300'} px-4 py-2 rounded-lg shadow-xl flex items-center gap-2 slide-up`;
+            t.innerHTML = `<i data-lucide="${type=='success'?'check-circle':'alert-circle'}" class="w-4 h-4"></i><span class="text-sm font-bold">${msg}</span>`;
+            document.getElementById('toastContainer').appendChild(t);
             lucide.createIcons();
-            updateActiveNav(0);
+            setTimeout(()=>t.remove(), 3000);
         }
-
-        function renderMentor() {
-            const container = document.getElementById('appContent');
-            container.innerHTML = `
-                <div class="text-center mb-6 fade-in">
-                    <div class="w-24 h-24 bg-gradient-to-br from-indigo-900 to-slate-900 rounded-full mx-auto flex items-center justify-center border-4 border-indigo-500/30 mb-3 shadow-[0_0_20px_rgba(99,102,241,0.3)] relative">
-                        <div class="absolute inset-0 rounded-full animate-pulse bg-indigo-500/10"></div>
-                        <i data-lucide="sparkles" class="w-10 h-10 text-indigo-300 relative z-10"></i>
-                    </div>
-                    <h2 class="font-game text-xl text-white">Mentor Lógico</h2>
-                    <p class="text-xs text-slate-400 uppercase tracking-widest mt-1">Sabiduría de Maite Moyá</p>
-                </div>
-
-                <div id="chatBox" class="bg-slate-800/80 backdrop-blur rounded-xl p-4 h-[350px] overflow-y-auto mb-4 border border-slate-700 shadow-inner flex flex-col gap-3">
-                    <div class="self-start max-w-[85%]"><span class="bg-indigo-900/80 text-indigo-100 text-sm px-4 py-2 rounded-2xl rounded-tl-sm inline-block border border-indigo-500/30 shadow-sm">¡Hola, líder! Soy tu guía en este viaje. ¿Cómo te sientes hoy?</span></div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3 fade-in">
-                    <button onclick="addChat('fear')" class="btn-secondary p-3 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-700 hover:text-white transition-colors border border-slate-700">Tengo Miedo / Dudas</button>
-                    <button onclick="addChat('fail')" class="btn-secondary p-3 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-700 hover:text-white transition-colors border border-slate-700">Fallé una misión</button>
-                    <button onclick="addChat('tips')" class="btn-secondary col-span-2 p-3 rounded-lg text-xs font-bold text-indigo-300 hover:bg-indigo-900/30 hover:text-white transition-colors border border-indigo-500/30">Dame un consejo de liderazgo</button>
-                </div>
-                
-                ${FOOTER_HTML}
-            `;
-            lucide.createIcons();
-            updateActiveNav(1);
+        function toggleModal(show, html=null) {
+            const el = document.getElementById('modalOverlay');
+            if(html) document.getElementById('dynamicModalBody').innerHTML = html;
+            if(show) { el.classList.remove('hidden'); setTimeout(()=>el.classList.remove('opacity-0'),10); } else { el.classList.add('opacity-0'); setTimeout(()=>el.classList.add('hidden'),200); }
         }
-
-        function addChat(type) {
-            const chatBox = document.getElementById('chatBox');
-            
-            let userText = "";
-            if(type === 'fear') userText = "Siento miedo o dudas...";
-            if(type === 'fail') userText = "He fallado...";
-            if(type === 'tips') userText = "Necesito un consejo...";
-
-            const userMsgHTML = `<div class="self-end max-w-[85%] slide-up"><span class="bg-slate-600 text-white text-sm px-4 py-2 rounded-2xl rounded-tr-sm inline-block shadow-sm">${userText}</span></div>`;
-            chatBox.insertAdjacentHTML('beforeend', userMsgHTML);
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            const quotes = GAME_DATA.mentorQuotes[type];
-            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-
+        function showConfirmation(title, msg, onConfirm) {
+            toggleModal(true, `<h3 class="text-xl font-bold text-white mb-2 font-game">${title}</h3><p class="text-slate-300 mb-6 text-sm">${msg}</p><div class="flex justify-end gap-3"><button onclick="toggleModal(false)" class="px-4 py-2 text-slate-400 text-sm">Cancelar</button><button id="confBtn" class="px-5 py-2 bg-indigo-600 text-white rounded font-bold text-sm">Confirmar</button></div>`);
+            document.getElementById('confBtn').onclick = () => { onConfirm(); toggleModal(false); };
+        }
+        const mentorQuotes = { fail: ["Aprende del error.", "Inténtalo de nuevo."], fear: ["El miedo es normal.", "Hazlo con miedo."], tips: ["Escucha más.", "Sonríe."] };
+        window.addChat = (t) => {
+            const b = document.getElementById('chatBox');
+            b.insertAdjacentHTML('beforeend', `<div class="self-end max-w-[85%] slide-up mb-2"><span class="bg-slate-600 text-white text-xs px-3 py-2 rounded-2xl inline-block">...</span></div>`);
+            b.scrollTop = b.scrollHeight;
             setTimeout(() => {
-                const typingId = 'typing-' + Date.now();
-                const typingHTML = `<div id="${typingId}" class="self-start max-w-[85%] fade-in"><span class="bg-indigo-900/50 text-indigo-200 text-xs px-3 py-2 rounded-2xl rounded-tl-sm inline-block flex gap-1"><span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></span><span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span><span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span></span></div>`;
-                chatBox.insertAdjacentHTML('beforeend', typingHTML);
-                chatBox.scrollTop = chatBox.scrollHeight;
+                b.lastElementChild.remove();
+                b.insertAdjacentHTML('beforeend', `<div class="self-start max-w-[90%] slide-up mb-2"><span class="bg-indigo-900/80 text-indigo-100 text-xs px-3 py-2 rounded-2xl border border-indigo-500/30">${mentorQuotes[t][Math.floor(Math.random()*mentorQuotes[t].length)]}</span></div>`);
+                b.scrollTop = b.scrollHeight;
+            }, 600);
+        };
+        window.showStatInfo = (k) => { const d = STAT_DEFINITIONS[k]; toggleModal(true, `<div class="text-center"><div class="w-16 h-16 rounded-full bg-slate-700 mx-auto flex items-center justify-center mb-4 border-2 ${d.color.replace('text','border')}"><i data-lucide="${d.icon}" class="w-8 h-8 ${d.color}"></i></div><h3 class="text-xl font-bold text-white mb-1">${d.name}</h3><p class="text-xs ${d.color} uppercase font-bold mb-4">${d.book_concept}</p><p class="text-slate-300 text-sm italic">"${d.desc}"</p><div class="flex justify-between items-center bg-slate-700 p-3 rounded-lg mt-4"><span class="text-xs text-slate-400 uppercase">Nivel</span><span class="text-xl font-bold text-white">${gameState.stats[k]}</span></div><button onclick="toggleModal(false)" class="mt-6 w-full py-2 bg-slate-700 text-white rounded font-bold text-sm">OK</button></div>`); lucide.createIcons(); };
+        function launchConfetti() { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }
 
-                setTimeout(() => {
-                    document.getElementById(typingId).remove();
-                    const botMsgHTML = `<div class="self-start max-w-[90%] slide-up"><span class="bg-indigo-900/80 text-indigo-100 text-sm px-4 py-2 rounded-2xl rounded-tl-sm inline-block border border-indigo-500/30 shadow-sm">${randomQuote}</span></div>`;
-                    chatBox.insertAdjacentHTML('beforeend', botMsgHTML);
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                }, 800 + Math.random() * 500);
-            }, 300);
-        }
-
-        function renderProfile() {
-            const container = document.getElementById('appContent');
-            const totalMissions = gameState.completedMissions.length;
-            
-            container.innerHTML = `
-                <div class="mb-6 fade-in">
-                    <h2 class="font-game text-lg mb-4 text-white">Tu Hoja de Personaje</h2>
-                    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 text-center border border-slate-700 shadow-xl relative overflow-hidden">
-                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
-                        <h1 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 mb-2 font-game drop-shadow-sm">${gameState.level}</h1>
-                        <p class="text-slate-400 uppercase tracking-[0.2em] text-[10px] font-bold">Rango Actual</p>
-                        <div class="mt-4 flex justify-center gap-4 text-xs text-slate-500">
-                             <div class="flex flex-col"><span class="text-white font-bold text-lg">${totalMissions}</span> Misiones</div>
-                             <div class="w-px bg-slate-700"></div>
-                             <div class="flex flex-col"><span class="text-white font-bold text-lg">${Object.values(gameState.stats).reduce((a,b)=>a+b, 0)}</span> Atributos</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="fade-in" style="animation-delay: 0.1s">
-                    <h3 class="text-white font-bold mb-3 flex items-center gap-2 text-sm uppercase tracking-wide opacity-80"><i data-lucide="clock" class="w-4 h-4"></i> Historial de Hazañas</h3>
-                    <div class="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                        ${gameState.completedMissions.length === 0 
-                            ? '<div class="text-center p-8 border-2 border-dashed border-slate-700 rounded-xl"><p class="text-slate-500 text-sm">Tu leyenda aún no ha sido escrita.</p></div>' 
-                            : gameState.completedMissions.slice().reverse().map(m => {
-                                const original = GAME_DATA.missions.find(om => om.id === m.id);
-                                return `<div class="bg-slate-800/50 p-3 rounded-lg flex justify-between items-center text-sm border border-slate-700/50 hover:bg-slate-800 transition">
-                                            <span class="text-slate-300 font-medium truncate pr-4">${original ? original.title : 'Misión Desconocida'}</span>
-                                            <span class="text-slate-500 text-[10px] bg-slate-900 px-2 py-1 rounded whitespace-nowrap">${m.date}</span>
-                                        </div>`
-                            }).join('')
-                        }
-                    </div>
-                </div>
-                
-                <div class="mt-8 pt-6 border-t border-slate-700/50 text-center fade-in" style="animation-delay: 0.2s">
-                    <button onclick="if(confirm('¿Estás seguro de que quieres borrar todo tu progreso? Esta acción es irreversible.')){localStorage.removeItem('heroRPG_save'); location.reload();}" class="text-red-400/60 hover:text-red-400 text-xs font-bold transition-colors flex items-center justify-center gap-1 mx-auto py-2 px-4 hover:bg-red-500/10 rounded-lg">
-                        <i data-lucide="trash-2" class="w-3 h-3"></i> Reiniciar Progreso
-                    </button>
-                </div>
-                
-                ${FOOTER_HTML}
-            `;
-            lucide.createIcons();
-            updateActiveNav(2);
-        }
-
-        function updateActiveNav(index) {
-            const buttons = document.querySelectorAll('.nav-btn');
-            buttons.forEach((btn, i) => {
-                const iconDiv = btn.querySelector('div');
-                const textSpan = btn.querySelector('span');
-                
-                if(i === index) {
-                    btn.classList.remove('text-slate-400');
-                    btn.classList.add('text-indigo-400');
-                    iconDiv.classList.add('bg-slate-800', 'shadow-inner');
-                } else {
-                    btn.classList.add('text-slate-400');
-                    btn.classList.remove('text-indigo-400');
-                    iconDiv.classList.remove('bg-slate-800', 'shadow-inner');
-                }
-            });
-        }
-
-        // Init
-        lucide.createIcons();
-        updateUI();
-        renderMissions(); // Default view
-
+        initGame();
     </script>
 </body>
 </html>
