@@ -206,7 +206,7 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        const APP_VERSION = "4.3.0"; 
+        const APP_VERSION = "4.3.1"; 
         const SAVE_KEY = "lenguajeMente_save_v4";
 
         const STAT_DEFINITIONS = {
@@ -216,7 +216,6 @@
             Mag: { name: "Dominio del Espíritu", archetype_group: "El Mago", desc: "La capacidad de transformar la realidad.", icon: "sparkles", color: "text-purple-400" }
         };
 
-        // --- MENTOR DATA (10 Respuestas únicas por categoría) ---
         const MENTOR_DATA = {
             judge: [
                 "El Juez busca perfección, pero la perfección es un espejismo. Busca progreso.",
@@ -268,7 +267,6 @@
             ]
         };
 
-        // Tracker para evitar repeticiones consecutivas
         const lastChatIndices = { judge: -1, victim: -1, fear: -1, wise: -1 };
 
         const ALL_MISSIONS = [
@@ -400,14 +398,14 @@
             }
         }
 
-        // --- FOOTER ACTUALIZADO CON VERSIÓN Y CRÉDITO ---
+        // --- FOOTER ACTUALIZADO CON VISIBILIDAD MEJORADA ---
         const FOOTER_HTML = `
-            <div class="text-center pt-8 pb-24 opacity-40 hover:opacity-80 transition-opacity duration-500 cursor-default select-none space-y-2">
-                <p class="text-[9px] text-teal-200/50 font-medium tracking-widest uppercase">INSPIRED BY "EL LENGUAJE DE LA MENTE"</p>
-                <p class="flex items-center justify-center gap-1 text-[9px] text-slate-500 font-light">
-                    Made with <i data-lucide="heart" class="w-3 h-3 text-red-400 fill-red-400 animate-pulse"></i> by the Liderapia team for you
+            <div class="text-center pt-8 pb-24 opacity-60 hover:opacity-100 transition-opacity duration-500 cursor-default select-none space-y-2">
+                <p class="text-[9px] text-teal-200/70 font-medium tracking-widest uppercase">INSPIRED BY "EL LENGUAJE DE LA MENTE"</p>
+                <p class="flex items-center justify-center gap-1 text-[10px] text-slate-300 font-medium">
+                    Made with <i data-lucide="heart" class="w-3 h-3 text-red-500 fill-red-500 animate-pulse"></i> by the Liderapia team for you
                 </p>
-                <p class="text-[8px] text-slate-700 font-mono">v${APP_VERSION}</p>
+                <p class="text-[9px] text-slate-400 font-mono tracking-wider">v${APP_VERSION}</p>
             </div>
         `;
 
@@ -737,8 +735,7 @@
                                     </div>`
                                 }).join('')}
                             </div>
-                        </div>` : ''
-                    }
+                        </div>` : ''}
 
                     <div class="mt-12 text-center">
                         <button onclick="if(confirm('¿Reiniciar todo el progreso?')){localStorage.removeItem('${SAVE_KEY}'); location.reload();}" class="group flex items-center justify-center gap-2 mx-auto px-6 py-3 rounded-full hover:bg-red-500/10 transition-all">
@@ -761,24 +758,15 @@
             document.getElementById('rankBadge').innerText = currentRank.title;
         }
 
-        // --- LÓGICA DE CHAT MENTOR MEJORADA (Anti-repetición) ---
         window.addChat = (type) => {
             const box = document.getElementById('chatBox');
             const messages = MENTOR_DATA[type];
-            
-            // Selección anti-repetición: Asegura que no salga el mismo mensaje seguido
             let idx;
-            do {
-                idx = Math.floor(Math.random() * messages.length);
-            } while (messages.length > 1 && idx === lastChatIndices[type]);
-            
-            lastChatIndices[type] = idx; // Guardar índice usado
+            do { idx = Math.floor(Math.random() * messages.length); } while (messages.length > 1 && idx === lastChatIndices[type]);
+            lastChatIndices[type] = idx;
             const randomMsg = messages[idx];
-
             const userLabels = {judge: "Siento mucha autocrítica...", victim: "Me siento impotente...", fear: "Tengo miedo...", wise: "Necesito perspectiva..."};
-            
             box.insertAdjacentHTML('beforeend', `<div class="self-end max-w-[85%] slide-up mb-2 text-right"><span class="bg-white/10 text-white text-xs px-4 py-3 rounded-2xl rounded-tr-none inline-block backdrop-blur-sm border border-white/10">${userLabels[type]}</span></div>`);
-            
             setTimeout(() => {
                 box.insertAdjacentHTML('beforeend', `<div class="self-start max-w-[90%] slide-up mb-2"><span class="bg-indigo-500/20 text-indigo-100 text-xs px-4 py-3 rounded-2xl rounded-tl-none inline-block border border-indigo-500/20 shadow-sm leading-relaxed">${randomMsg}</span></div>`);
                 box.scrollTop = box.scrollHeight;
