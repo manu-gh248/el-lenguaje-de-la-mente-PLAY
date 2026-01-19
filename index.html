@@ -21,7 +21,7 @@
         
         /* Glassmorphism Classes */
         .glass-panel {
-            background: rgba(2, 6, 23, 0.9); /* Más opaco para mejor contraste */
+            background: rgba(2, 6, 23, 0.9);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -122,7 +122,7 @@
             opacity: 0; transition: opacity 0.2s;
         }
 
-        /* --- FONT CONTROL STYLES --- */
+        /* --- FONT CONTROL STYLES (MOBILE SAFE) --- */
         #fontControlMenu {
             position: absolute; /* Relative to body */
             top: 6rem; /* Aparece DEBAJO del header */
@@ -169,9 +169,9 @@
         <div class="p-3 pb-1"> <!-- Padding reducido -->
             <div class="flex justify-between items-start mb-2"> <!-- Margen reducido -->
                 
-                <!-- Título -->
+                <!-- Título INMUNE A ESCALADO (px fijos) -->
                 <div class="flex-1 mr-1 min-w-0">
-                    <h1 class="font-game text-lg text-transparent bg-clip-text bg-gradient-to-r from-teal-200 via-cyan-300 to-emerald-200 leading-tight drop-shadow-sm tracking-wide break-words">EL LENGUAJE<br>DE LA MENTE</h1>
+                    <h1 class="font-game text-[18px] text-transparent bg-clip-text bg-gradient-to-r from-teal-200 via-cyan-300 to-emerald-200 leading-tight drop-shadow-sm tracking-wide break-words">EL LENGUAJE<br>DE LA MENTE</h1>
                     <p class="text-[0.6rem] text-slate-400 flex flex-wrap items-center gap-1 mt-0.5 uppercase tracking-widest font-bold">
                         <span id="rankBadge" class="text-amber-400">Iniciado</span>
                         <span class="mx-0.5 text-slate-600">|</span>
@@ -183,14 +183,14 @@
                 <div class="flex items-start gap-2 flex-shrink-0">
                     
                     <!-- Columna de Botones (Compacta) -->
-                    <div class="flex flex-col gap-1.5 items-center">
+                    <div class="flex flex-col gap-2 items-center">
                         <!-- Ayuda (Pergamino) -->
                         <button onclick="showHelp()" class="p-1.5 bg-amber-500/10 rounded-full hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-colors backdrop-blur-sm shadow-lg group animate-pulse">
                             <i data-lucide="scroll-text" class="w-4 h-4"></i>
                         </button>
-                        <!-- Letra (Aa) - Discreto -->
-                        <button id="fontBtnTop" onclick="toggleFontMenu()" class="p-1.5 rounded-full hover:bg-white/5 text-slate-500 hover:text-slate-300 transition-colors border border-transparent hover:border-white/10" title="Tamaño de letra">
-                            <i data-lucide="type" class="w-3 h-3"></i>
+                        <!-- Letra (Aa) - VISIBLE y mismo tamaño que el pergamino -->
+                        <button id="fontBtnTop" onclick="toggleFontMenu()" class="p-1.5 bg-slate-800/80 rounded-full hover:bg-slate-700 text-slate-400 hover:text-white transition-colors border border-slate-700/50 shadow-md" title="Tamaño de letra">
+                            <i data-lucide="type" class="w-4 h-4"></i>
                         </button>
                     </div>
 
@@ -229,9 +229,9 @@
         <!-- Content injected via JS -->
     </main>
 
-    <!-- Navigation (Flex-none puts it in flow, removing overlap) -->
+    <!-- Navigation (Altura reducida) -->
     <nav class="glass-panel border-t border-white/5 w-full z-20 m-0 rounded-t-2xl backdrop-blur-xl bg-slate-900/60 flex-none">
-        <div class="nav-grid p-2 pb-5 pt-2">
+        <div class="nav-grid p-1 pb-3 pt-2"> <!-- Padding reducido -->
             <button id="missionsBtn" onclick="renderMissions()" class="nav-btn flex flex-col items-center text-teal-300 p-2 rounded-xl transition-all active:scale-95 group">
                 <div class="p-1 rounded-lg group-hover:bg-teal-500/10 transition"><i data-lucide="swords" class="w-5 h-5"></i></div>
                 <span class="text-[0.6rem] font-bold mt-0.5 uppercase tracking-widest truncate w-full text-center">Retos</span>
@@ -256,7 +256,7 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        const APP_VERSION = "4.9.0"; 
+        const APP_VERSION = "4.9.1"; 
         const SAVE_KEY = "lenguajeMente_save_v4";
 
         const STAT_DEFINITIONS = {
