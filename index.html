@@ -172,10 +172,10 @@
                 <!-- Título INMUNE A ESCALADO (px fijos) -->
                 <div class="flex-1 mr-[4px] min-w-0">
                     <h1 class="font-game text-[18px] text-transparent bg-clip-text bg-gradient-to-r from-teal-200 via-cyan-300 to-emerald-200 leading-tight drop-shadow-sm tracking-wide break-words">EL LENGUAJE<br>DE LA MENTE</h1>
-                    <p class="text-[10px] text-slate-400 flex flex-wrap items-center gap-[4px] mt-[2px] uppercase tracking-widest font-bold">
+                    <p class="text-[9px] text-slate-400 flex flex-wrap items-center gap-[4px] mt-[2px] uppercase tracking-widest font-bold">
                         <span id="rankBadge" class="text-amber-400">Iniciado</span>
                         <span class="mx-[2px] text-slate-600">|</span>
-                        Nvl <span id="userLevel" class="text-white">1</span>
+                        Nivel <span id="userLevel" class="text-white">1</span>
                     </p>
                 </div>
                 
@@ -188,8 +188,8 @@
                         <button onclick="showHelp()" class="p-[6px] bg-amber-500/10 rounded-full hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-colors backdrop-blur-sm shadow-lg group animate-pulse">
                             <i data-lucide="scroll-text" class="w-[16px] h-[16px]"></i>
                         </button>
-                        <!-- Letra (Aa) - VISIBLE y mismo tamaño que el pergamino -->
-                        <button id="fontBtnTop" onclick="toggleFontMenu()" class="p-[6px] bg-slate-800/80 rounded-full hover:bg-slate-700 text-slate-400 hover:text-white transition-colors border border-slate-700/50 shadow-md" title="Tamaño de letra">
+                        <!-- Letra (Aa) - SOLO CONTORNO -->
+                        <button id="fontBtnTop" onclick="toggleFontMenu()" class="p-[6px] bg-transparent rounded-full hover:bg-white/10 text-slate-500 hover:text-white transition-colors border border-slate-500/50 hover:border-white/50" title="Tamaño de letra">
                             <i data-lucide="type" class="w-[16px] h-[16px]"></i>
                         </button>
                     </div>
@@ -256,7 +256,7 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        const APP_VERSION = "4.9.6"; 
+        const APP_VERSION = "4.9.7"; 
         const SAVE_KEY = "lenguajeMente_save_v4";
 
         const STAT_DEFINITIONS = {
@@ -724,7 +724,7 @@
                             <div class="slider-track" id="slider-${m.id}">
                                 <div class="slider-fill-left"></div>
                                 <div class="slider-fill-right"></div>
-                                <div class="absolute inset-0 flex justify-between items-center px-5 text-[0.625rem] font-bold uppercase tracking-[0.2em] pointer-events-none z-10 opacity-70">
+                                <div class="absolute inset-0 flex justify-between items-center px-5 text-[9px] font-bold uppercase tracking-[0.2em] pointer-events-none z-10 opacity-70">
                                     <span class="text-red-300 drop-shadow-md">Evitar</span>
                                     <span class="text-teal-300 drop-shadow-md">Integrar</span>
                                 </div>
