@@ -231,7 +231,7 @@
 
     <!-- Navigation (PX Based - Inmune a zoom) -->
     <nav class="glass-panel border-t border-white/5 w-full z-20 m-0 rounded-t-[16px] backdrop-blur-xl bg-slate-900/60 flex-none">
-        <div class="nav-grid p-[4px] pb-[12px] pt-[8px]"> 
+        <div class="nav-grid p-[4px] pb-[4px] pt-[4px]"> 
             <button id="missionsBtn" onclick="renderMissions()" class="nav-btn flex flex-col items-center text-teal-300 p-[8px] rounded-[12px] transition-all active:scale-95 group">
                 <div class="p-[4px] rounded-[8px] group-hover:bg-teal-500/10 transition"><i data-lucide="swords" class="w-[20px] h-[20px]"></i></div>
                 <span class="text-[10px] font-bold mt-[2px] uppercase tracking-widest truncate w-full text-center">Retos</span>
@@ -256,7 +256,7 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        const APP_VERSION = "4.9.2"; 
+        const APP_VERSION = "4.9.3"; 
         const SAVE_KEY = "lenguajeMente_save_v4";
 
         const STAT_DEFINITIONS = {
@@ -887,127 +887,6 @@
                     ${FOOTER_HTML}
                 </div>
             `);
-        }
-
-        function updateUI() {
-            for (const [key, val] of Object.entries(gameState.stats)) { const el = document.getElementById(`stat${key}`); if(el) el.innerText = val; }
-            const percent = (gameState.xp / TOTAL_MAX_XP) * 100;
-            let currentRank = RANKS[0], level = 1;
-            for (let i = 0; i < RANKS.length; i++) { if (percent >= RANKS[i].threshold) { currentRank = RANKS[i]; level = i + 1; } }
-            document.getElementById('currentXp').innerText = gameState.xp;
-            document.getElementById('userLevel').innerText = level;
-            document.getElementById('rankBadge').innerText = currentRank.title;
-        }
-
-        window.addChat = (type) => {
-            const box = document.getElementById('chatBox');
-            const messages = MENTOR_DATA[type];
-            let idx;
-            do { idx = Math.floor(Math.random() * messages.length); } while (messages.length > 1 && idx === lastChatIndices[type]);
-            lastChatIndices[type] = idx;
-            const randomMsg = messages[idx];
-            const userLabels = {judge: "Siento mucha autocrítica...", victim: "Me siento impotente...", fear: "Tengo miedo...", wise: "Necesito perspectiva..."};
-            box.insertAdjacentHTML('beforeend', `<div class="self-end max-w-[85%] slide-up mb-2 text-right"><span class="bg-white/10 text-white text-xs px-4 py-3 rounded-2xl rounded-tr-none inline-block backdrop-blur-sm border border-white/10">${userLabels[type]}</span></div>`);
-            setTimeout(() => {
-                box.insertAdjacentHTML('beforeend', `<div class="self-start max-w-[90%] slide-up mb-2"><span class="bg-indigo-500/20 text-indigo-100 text-xs px-4 py-3 rounded-2xl rounded-tl-none inline-block border border-indigo-500/20 shadow-sm leading-relaxed">${randomMsg}</span></div>`);
-                box.scrollTop = box.scrollHeight;
-            }, 600);
-            box.scrollTop = box.scrollHeight;
-        };
-
-        window.showStatInfo = (k) => { 
-            const d = STAT_DEFINITIONS[k]; 
-            toggleModal(true, `
-                <div class="text-center">
-                    <div class="w-20 h-20 rounded-full bg-slate-900 mx-auto flex items-center justify-center mb-6 border-2 ${d.color.replace('text','border')} shadow-[0_0_25px_rgba(255,255,255,0.05)] relative overflow-hidden">
-                        <div class="absolute inset-0 bg-white/5 animate-pulse"></div>
-                        <i data-lucide="${d.icon}" class="w-10 h-10 ${d.color} relative z-10"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-white mb-1 font-game tracking-wide">${d.name}</h3>
-                    <p class="text-[0.625rem] text-slate-500 uppercase font-bold mb-6 tracking-[0.2em]">${d.archetype_group}</p>
-                    
-                    <!-- Updated Description with Divider -->
-                    <div class="text-slate-300 text-sm leading-loose mb-8 bg-slate-900/60 p-6 rounded-2xl border border-white/5 font-serif italic relative">
-                        <div class="w-8 h-0.5 bg-${d.color.split('-')[1]}-500/30 mx-auto mb-4 rounded-full"></div>
-                        "${d.desc}"
-                    </div>
-
-                    <div class="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5 mb-6">
-                        <span class="text-[0.625rem] text-slate-500 uppercase font-bold tracking-widest">Nivel Actual</span>
-                        <span class="text-2xl font-bold text-white font-game">${gameState.stats[k]}</span>
-                    </div>
-                    <button onclick="toggleModal(false)" class="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-colors">Entendido</button>
-                </div>
-            `); 
-            lucide.createIcons(); 
-        };
-
-        function showHelp() {
-            toggleModal(true, `
-                <div class="text-center">
-                    <div class="mb-6 inline-block relative">
-                         <div class="absolute -inset-4 bg-teal-500/20 rounded-full blur-xl"></div>
-                         <h2 class="font-game text-2xl text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-emerald-400 relative z-10">Bienvenido, Viajero</h2>
-                    </div>
-                    
-                    <div class="text-left space-y-4 text-sm text-slate-300 mb-6 bg-slate-900/60 p-6 rounded-2xl border border-white/5 shadow-inner">
-                        <p class="leading-relaxed font-serif">
-                            <span class="text-white text-lg float-left mr-2 font-game text-teal-400">¿</span>Alguna vez has sentido que no eres tú quien lleva el volante de tu vida? Que una voz interna —crítica, miedosa, exigente— decide por ti. No estás solo. Es tu <strong>Villano</strong> tomando el control.
-                        </p>
-                        <p class="leading-relaxed">
-                            En <em>"El Lenguaje de la Mente"</em>, la Dra. Maite Moyá nos revela que dentro de ti habitan 15 Arquetipos. Fuerzas que pueden ser tu cárcel... o tus alas.
-                        </p>
-                        <p class="leading-relaxed">
-                            Este juego es tu <strong>gimnasio mental</strong>. Aquí no ganas puntos por vencer enemigos externos, sino por <strong>despertar</strong>. Por elegir conscientemente al Héroe sobre el Villano.
-                        </p>
-                    </div>
-
-                    <!-- NUEVA SECCIÓN: INSTRUCCIONES DE JUEGO -->
-                    <div class="text-left mb-6 bg-teal-900/20 p-5 rounded-2xl border border-teal-500/20">
-                        <h3 class="font-game text-teal-300 text-xs uppercase tracking-widest mb-4 flex items-center gap-2 font-bold">
-                            <i data-lucide="compass" class="w-4 h-4"></i> Instrucciones de Vuelo
-                        </h3>
-                        <ul class="space-y-3 text-xs text-slate-300">
-                            <li class="flex items-start gap-3">
-                                <div class="bg-teal-500/10 p-1.5 rounded-lg border border-teal-500/20 shrink-0">
-                                    <i data-lucide="arrow-right" class="w-4 h-4 text-teal-400"></i>
-                                </div>
-                                <div>
-                                    <strong class="text-teal-200 block mb-0.5">Desliza a la DERECHA</strong>
-                                    <span>Para <em>Integrar</em> al Héroe. Elige la acción luminosa y gana XP.</span>
-                                </div>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <div class="bg-red-500/10 p-1.5 rounded-lg border border-red-500/20 shrink-0">
-                                    <i data-lucide="arrow-left" class="w-4 h-4 text-red-400"></i>
-                                </div>
-                                <div>
-                                    <strong class="text-red-200 block mb-0.5">Desliza a la IZQUIERDA</strong>
-                                    <span>Para <em>Evitar</em> al Villano. Esquiva la trampa mental (sin XP).</span>
-                                </div>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <div class="bg-purple-500/10 p-1.5 rounded-lg border border-purple-500/20 shrink-0">
-                                    <i data-lucide="bot" class="w-4 h-4 text-purple-400"></i>
-                                </div>
-                                <div>
-                                    <strong class="text-purple-200 block mb-0.5">Consulta al Mentor</strong>
-                                    <span>Si te sientes bloqueado, pide consejo al Oráculo en la pestaña Mentor.</span>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                    
-                    <div class="mb-6 text-center pt-2 border-t border-white/5">
-                        <p class="text-[0.625rem] text-teal-200/60 uppercase tracking-widest font-bold">Juega para practicar. Lee para entender.</p>
-                    </div>
-                    
-                    <button onclick="toggleModal(false)" class="w-full py-4 bg-gradient-to-r from-teal-700 to-emerald-800 hover:from-teal-600 hover:to-emerald-700 text-white rounded-xl font-bold text-xs uppercase tracking-[0.2em] shadow-lg shadow-emerald-900/50 transition-all transform active:scale-95">
-                        Iniciar Mi Transformación
-                    </button>
-                </div>
-            `);
-            lucide.createIcons();
         }
 
         function showToast(msg, type) {
