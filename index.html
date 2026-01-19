@@ -134,7 +134,7 @@
         /* Grid de Navegación */
         .nav-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr); /* Vuelta a 4 columnas */
+            grid-template-columns: repeat(4, 1fr); /* 4 columnas */
             gap: 0; 
         }
         .nav-btn {
@@ -256,7 +256,7 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        const APP_VERSION = "4.9.3"; 
+        const APP_VERSION = "4.9.6"; 
         const SAVE_KEY = "lenguajeMente_save_v4";
 
         const STAT_DEFINITIONS = {
@@ -451,6 +451,40 @@
 
         let gameState = { version: APP_VERSION, xp: 0, level: 1, stats: { Gue: 1, Sab: 1, Ama: 1, Mag: 1 }, activeIds: [], pendingIds: [], completedIds: [], skippedIds: [] };
 
+        // --- CORE FUNCTIONS (Defined early to avoid reference issues) ---
+        function updateUI() {
+            for (const [key, val] of Object.entries(gameState.stats)) { const el = document.getElementById(`stat${key}`); if(el) el.innerText = val; }
+            const percent = (gameState.xp / TOTAL_MAX_XP) * 100;
+            let currentRank = RANKS[0], level = 1;
+            for (let i = 0; i < RANKS.length; i++) { if (percent >= RANKS[i].threshold) { currentRank = RANKS[i]; level = i + 1; } }
+            
+            const xpEl = document.getElementById('currentXp');
+            if(xpEl) xpEl.innerText = gameState.xp;
+            
+            const lvlEl = document.getElementById('userLevel');
+            if(lvlEl) lvlEl.innerText = level;
+            
+            const rankEl = document.getElementById('rankBadge');
+            if(rankEl) rankEl.innerText = currentRank.title;
+        }
+
+        function saveGame() { 
+            localStorage.setItem(SAVE_KEY, JSON.stringify(gameState)); 
+            updateUI(); 
+        }
+
+        // --- RESTORED setupNewGame FUNCTION ---
+        function setupNewGame() {
+            const allIds = ALL_MISSIONS.map(m => m.id);
+            gameState.activeIds = allIds.slice(0, 4);
+            gameState.pendingIds = allIds.slice(4);
+            gameState.xp = 0; gameState.level = 1; gameState.stats = { Gue: 1, Sab: 1, Ama: 1, Mag: 1 };
+            gameState.completedIds = []; gameState.skippedIds = [];
+            saveGame();
+        }
+
+        function getMissionById(id) { return ALL_MISSIONS.find(m => m.id === id); }
+
         function generateBackground() {
             const bgContainer = document.getElementById('bg-pattern');
             bgContainer.innerHTML = '';
@@ -472,7 +506,7 @@
             }
         }
 
-        // --- FOOTER ACTUALIZADO CON VISIBILIDAD MEJORADA (Rem-Based for scale inside main) ---
+        // --- FOOTER HTML ---
         const FOOTER_HTML = `
             <div class="text-center pt-8 pb-24 opacity-60 hover:opacity-100 transition-opacity duration-500 cursor-default select-none space-y-2">
                 <p class="text-[0.6rem] text-teal-200/70 font-medium tracking-widest uppercase">INSPIRED BY "EL LENGUAJE DE LA MENTE"</p>
@@ -483,16 +517,13 @@
             </div>
         `;
 
-        // --- FONT CONTROL LOGIC ---
+        // --- FONT CONTROL ---
         function toggleFontMenu() {
             const menu = document.getElementById('fontControlMenu');
             menu.classList.toggle('hidden');
             menu.classList.toggle('flex');
-            
             if (!menu.classList.contains('hidden')) {
-                setTimeout(() => {
-                    menu.classList.remove('opacity-0', 'scale-95');
-                }, 10);
+                setTimeout(() => { menu.classList.remove('opacity-0', 'scale-95'); }, 10);
             } else {
                 menu.classList.add('opacity-0', 'scale-95');
             }
@@ -501,11 +532,8 @@
         function adjustFontSize(delta) {
             let currentSize = parseInt(localStorage.getItem('fontSize_v4') || '100');
             let newSize = currentSize + delta;
-            
-            // Constraints: 85% to 135%
             if (newSize < 85) newSize = 85;
             if (newSize > 135) newSize = 135;
-            
             document.documentElement.style.fontSize = `${newSize}%`;
             document.getElementById('fontSizeDisplay').innerText = `${newSize}%`;
             localStorage.setItem('fontSize_v4', newSize);
@@ -519,41 +547,6 @@
             }
         }
 
-        function initGame() {
-            generateBackground();
-            initFontSize(); // Load saved font size
-            
-            const saved = localStorage.getItem(SAVE_KEY);
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    gameState = { ...gameState, ...parsed };
-                    if(gameState.activeIds.length === 0 && gameState.pendingIds.length === 0 && gameState.completedIds.length === 0) setupNewGame();
-                } catch (e) { setupNewGame(); }
-            } else { setupNewGame(); }
-            
-            // --- NUEVO: CHECK PRIMERA VISITA PARA MOSTRAR AYUDA ---
-            if (!localStorage.getItem('hasSeenIntro_v4')) {
-                setTimeout(() => showHelp(), 500); 
-                localStorage.setItem('hasSeenIntro_v4', 'true');
-            }
-
-            updateUI();
-            renderView();
-        }
-
-        function setupNewGame() {
-            const allIds = ALL_MISSIONS.map(m => m.id);
-            gameState.activeIds = allIds.slice(0, 4);
-            gameState.pendingIds = allIds.slice(4);
-            gameState.xp = 0; gameState.level = 1; gameState.stats = { Gue: 1, Sab: 1, Ama: 1, Mag: 1 };
-            gameState.completedIds = []; gameState.skippedIds = [];
-            saveGame();
-        }
-
-        function saveGame() { localStorage.setItem(SAVE_KEY, JSON.stringify(gameState)); updateUI(); }
-        function getMissionById(id) { return ALL_MISSIONS.find(m => m.id === id); }
-
         function showMissionDetails(id) {
             const m = getMissionById(id);
             const html = `
@@ -563,13 +556,10 @@
                         <h3 class="text-2xl font-bold text-white leading-tight font-game mb-2">${m.title}</h3>
                         <div class="h-0.5 w-12 bg-teal-500/30 mx-auto rounded-full"></div>
                     </div>
-
                     <div class="bg-slate-900/40 p-5 rounded-2xl border border-white/5 mb-6 shadow-inner">
                         <p class="text-slate-300 text-sm leading-relaxed font-serif italic text-center">"${m.desc}"</p>
                     </div>
-                    
                     <h4 class="text-xs font-bold text-center text-slate-400 uppercase tracking-widest mb-4">La Encrucijada</h4>
-
                     <div class="space-y-4 mb-8">
                         <div class="relative overflow-hidden group">
                             <div class="absolute inset-0 bg-gradient-to-r from-red-900/20 to-transparent opacity-50 group-hover:opacity-70 transition-opacity"></div>
@@ -581,7 +571,6 @@
                                 <p class="text-sm text-slate-300 leading-relaxed">${m.villain_effect}</p>
                             </div>
                         </div>
-
                         <div class="relative overflow-hidden group">
                             <div class="absolute inset-0 bg-gradient-to-l from-teal-900/20 to-transparent opacity-50 group-hover:opacity-70 transition-opacity"></div>
                             <div class="border-r-4 border-teal-500/50 bg-slate-900/40 p-4 rounded-l-xl text-right relative z-10">
@@ -593,17 +582,13 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="text-center mb-6">
                         <p class="text-xs text-slate-400 mb-2">Para activar al Héroe:</p>
                         <p class="text-teal-200 font-bold text-sm bg-teal-500/10 py-3 px-4 rounded-xl border border-teal-500/20 inline-block shadow-[0_0_15px_rgba(20,184,166,0.1)]">
                             <i data-lucide="zap" class="w-3 h-3 inline mr-1"></i> ${m.action}
                         </p>
                     </div>
-
-                    <button onclick="toggleModal(false)" class="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl font-bold transition-all border border-white/10 text-xs uppercase tracking-[0.2em] shadow-lg">
-                        Volver y Decidir
-                    </button>
+                    <button onclick="toggleModal(false)" class="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl font-bold transition-all border border-white/10 text-xs uppercase tracking-[0.2em] shadow-lg">Volver y Decidir</button>
                 </div>
             `;
             toggleModal(true, html);
@@ -673,39 +658,29 @@
         }
 
         function replenishActiveMissions() { if (gameState.activeIds.length < 4 && gameState.pendingIds.length > 0) gameState.activeIds.push(gameState.pendingIds.shift()); }
-        function recoverSkipped(id) { gameState.skippedIds = gameState.skippedIds.filter(sid => sid !== id); gameState.pendingIds.unshift(id); replenishActiveMissions(); showToast("Recuperado", "success"); saveGame(); renderView(); }
+        
+        function recoverSkipped(id) { 
+            gameState.skippedIds = gameState.skippedIds.filter(sid => sid !== id); 
+            gameState.pendingIds.unshift(id); 
+            replenishActiveMissions(); 
+            showToast("Recuperado", "success"); 
+            saveGame(); 
+            renderView(); 
+        }
 
         let currentView = 'missions'; 
+        
         function renderView() {
-            // Mapping button IDs to view names
-            const views = {
-                'missionsBtn': 'missions',
-                'mentorBtn': 'mentor',
-                'originBtn': 'origin',
-                'profileBtn': 'profile'
-            };
-            
-            // Loop through view buttons to set active state
+            const views = { 'missionsBtn': 'missions', 'mentorBtn': 'mentor', 'originBtn': 'origin', 'profileBtn': 'profile' };
             for (const [btnId, viewName] of Object.entries(views)) {
                 const btn = document.getElementById(btnId);
                 if (btn) {
                     const isActive = viewName === currentView;
-                    // Colors for each view
-                    const activeColors = {
-                        'missions': 'text-teal-300',
-                        'mentor': 'text-purple-300',
-                        'origin': 'text-amber-300',
-                        'profile': 'text-emerald-300'
-                    };
-                    
-                    if (isActive) {
-                        btn.className = `nav-btn flex flex-col items-center ${activeColors[viewName]} p-[8px] rounded-[12px] transition-all active:scale-95 group bg-white/5 shadow-inner border border-white/5`;
-                    } else {
-                        btn.className = `nav-btn flex flex-col items-center text-slate-600 p-[8px] rounded-[12px] transition-all active:scale-95 group hover:text-slate-400`;
-                    }
+                    const activeColors = { 'missions': 'text-teal-300', 'mentor': 'text-purple-300', 'origin': 'text-amber-300', 'profile': 'text-emerald-300' };
+                    if (isActive) btn.className = `nav-btn flex flex-col items-center ${activeColors[viewName]} p-[8px] rounded-[12px] transition-all active:scale-95 group bg-white/5 shadow-inner border border-white/5`;
+                    else btn.className = `nav-btn flex flex-col items-center text-slate-600 p-[8px] rounded-[12px] transition-all active:scale-95 group hover:text-slate-400`;
                 }
             }
-
             const c = document.getElementById('appContent');
             c.innerHTML = ''; 
             if (currentView === 'missions') renderMissionsView(c);
@@ -737,17 +712,14 @@
                                 <span class="text-[0.625rem] font-bold uppercase text-slate-400 tracking-[0.15em] bg-black/30 px-2 py-1 rounded border border-white/5">${m.villain} vs ${m.hero}</span>
                                 <div class="flex items-center gap-2">
                                     <div class="text-[0.625rem] font-bold text-teal-300 bg-teal-500/10 px-2 py-1 rounded border border-teal-500/20 shadow-[0_0_10px_rgba(20,184,166,0.1)]">+${m.xp} XP</div>
-                                    <!-- NUEVO BOTÓN INFO LATENTE -->
                                     <button onclick="showMissionDetails(${m.id})" class="text-amber-300 hover:text-white transition-colors p-2 bg-amber-500/10 hover:bg-amber-500/20 rounded-full animate-pulse border border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.2)] ml-2">
                                         <i data-lucide="scroll-text" class="w-5 h-5"></i>
                                     </button>
                                 </div>
                             </div>
-                            
                             <h3 class="font-bold text-white text-lg font-game leading-snug mb-2 drop-shadow-sm">${m.title}</h3>
                             <p class="text-sm text-slate-300/80 leading-relaxed font-light">${m.desc}</p>
                         </div>
-
                         <div class="w-full px-5 pb-6 pt-2">
                             <div class="slider-track" id="slider-${m.id}">
                                 <div class="slider-fill-left"></div>
@@ -756,9 +728,7 @@
                                     <span class="text-red-300 drop-shadow-md">Evitar</span>
                                     <span class="text-teal-300 drop-shadow-md">Integrar</span>
                                 </div>
-                                <div class="slider-knob" data-mission-id="${m.id}">
-                                    <i data-lucide="chevrons-left-right" class="w-5 h-5 opacity-90"></i>
-                                </div>
+                                <div class="slider-knob" data-mission-id="${m.id}"><i data-lucide="chevrons-left-right" class="w-5 h-5 opacity-90"></i></div>
                             </div>
                         </div>
                     </div>`;
@@ -800,7 +770,6 @@
                         <h2 class="font-game text-2xl text-white mb-2 tracking-wide">El Libro</h2>
                         <div class="h-0.5 w-16 bg-gradient-to-r from-transparent via-amber-500 to-transparent mx-auto"></div>
                     </div>
-
                     <div class="glass-panel p-8 rounded-2xl border border-amber-500/10 shadow-2xl mb-8 relative overflow-hidden group hover:border-amber-500/20 transition-colors">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
                         <div class="space-y-6 text-sm text-slate-300 leading-relaxed font-serif relative z-10">
@@ -818,7 +787,6 @@
                             </p>
                         </div>
                     </div>
-
                     <a href="https://www.amazon.es/El-Lenguaje-Mente-Arquetipos-Villanos-ebook/dp/B09GB54DBX" target="_blank" class="block text-center p-5 bg-gradient-to-r from-amber-500/10 to-amber-600/10 rounded-xl border border-amber-500/20 hover:from-amber-500/20 hover:to-amber-600/20 transition-all group shadow-lg">
                         <span class="text-amber-200 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 group-hover:gap-4 transition-all">
                             Adquirir Sabiduría <i data-lucide="external-link" class="w-4 h-4 text-amber-400"></i>
@@ -832,6 +800,29 @@
         function renderProfileView(c) {
             const completed = gameState.completedIds.length, skipped = gameState.skippedIds.length, total = ALL_MISSIONS.length;
             const prog = Math.round((completed / total) * 100);
+            
+            // Generate skipped items HTML safely
+            let skippedHtml = '';
+            if (skipped > 0) {
+                skippedHtml = `<div class="mb-8">
+                    <h3 class="text-[0.625rem] font-bold text-red-400/80 uppercase tracking-widest mb-4 flex items-center gap-2 px-2">
+                        <i data-lucide="refresh-ccw" class="w-3 h-3"></i> Sombras Pendientes
+                    </h3>
+                    <div class="space-y-3">
+                        ${gameState.skippedIds.map(id => {
+                            const m = getMissionById(id);
+                            return `<div class="glass-panel p-4 rounded-xl flex justify-between items-center border-l-2 border-l-red-500/40 bg-slate-900/40 hover:bg-slate-800/60 transition-colors group">
+                                <div class="overflow-hidden mr-3">
+                                    <span class="text-xs font-bold text-slate-300 block truncate group-hover:text-white transition-colors">${m.title}</span>
+                                    <span class="text-[0.6rem] text-red-400/60 uppercase tracking-wide">${m.villain}</span>
+                                </div>
+                                <button onclick="recoverSkipped(${m.id})" class="px-4 py-2 bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-200 text-[0.625rem] font-bold uppercase tracking-wider rounded-lg transition-all border border-white/5">Reintentar</button>
+                            </div>`
+                        }).join('')}
+                    </div>
+                </div>`;
+            }
+
             c.insertAdjacentHTML('beforeend', `
                 <div class="fade-in">
                     <div class="flex items-center gap-6 mb-8 px-2">
@@ -859,24 +850,7 @@
                         </div>
                     </div>
 
-                    ${skipped > 0 ? `
-                        <div class="mb-8">
-                            <h3 class="text-[0.625rem] font-bold text-red-400/80 uppercase tracking-widest mb-4 flex items-center gap-2 px-2">
-                                <i data-lucide="refresh-ccw" class="w-3 h-3"></i> Sombras Pendientes
-                            </h3>
-                            <div class="space-y-3">
-                                ${gameState.skippedIds.map(id => {
-                                    const m = getMissionById(id);
-                                    return `<div class="glass-panel p-4 rounded-xl flex justify-between items-center border-l-2 border-l-red-500/40 bg-slate-900/40 hover:bg-slate-800/60 transition-colors group">
-                                        <div class="overflow-hidden mr-3">
-                                            <span class="text-xs font-bold text-slate-300 block truncate group-hover:text-white transition-colors">${m.title}</span>
-                                            <span class="text-[0.6rem] text-red-400/60 uppercase tracking-wide">${m.villain}</span>
-                                        </div>
-                                        <button onclick="recoverSkipped(${m.id})" class="px-4 py-2 bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-200 text-[0.625rem] font-bold uppercase tracking-wider rounded-lg transition-all border border-white/5">Reintentar</button>
-                                    </div>`
-                                }).join('')}
-                            </div>
-                        </div>` : ''}
+                    ${skippedHtml}
 
                     <div class="mt-12 text-center">
                         <button onclick="if(confirm('¿Reiniciar todo el progreso?')){localStorage.removeItem('${SAVE_KEY}'); location.reload();}" class="group flex items-center justify-center gap-2 mx-auto px-6 py-3 rounded-full hover:bg-red-500/10 transition-all">
@@ -887,6 +861,80 @@
                     ${FOOTER_HTML}
                 </div>
             `);
+        }
+
+        window.addChat = (type) => {
+            const box = document.getElementById('chatBox');
+            const messages = MENTOR_DATA[type];
+            let idx;
+            do { idx = Math.floor(Math.random() * messages.length); } while (messages.length > 1 && idx === lastChatIndices[type]);
+            lastChatIndices[type] = idx;
+            const randomMsg = messages[idx];
+            const userLabels = {judge: "Siento mucha autocrítica...", victim: "Me siento impotente...", fear: "Tengo miedo...", wise: "Necesito perspectiva..."};
+            box.insertAdjacentHTML('beforeend', `<div class="self-end max-w-[85%] slide-up mb-2 text-right"><span class="bg-white/10 text-white text-xs px-4 py-3 rounded-2xl rounded-tr-none inline-block backdrop-blur-sm border border-white/10">${userLabels[type]}</span></div>`);
+            setTimeout(() => {
+                box.insertAdjacentHTML('beforeend', `<div class="self-start max-w-[90%] slide-up mb-2"><span class="bg-indigo-500/20 text-indigo-100 text-xs px-4 py-3 rounded-2xl rounded-tl-none inline-block border border-indigo-500/20 shadow-sm leading-relaxed">${randomMsg}</span></div>`);
+                box.scrollTop = box.scrollHeight;
+            }, 600);
+            box.scrollTop = box.scrollHeight;
+        };
+
+        window.showStatInfo = (k) => { 
+            const d = STAT_DEFINITIONS[k]; 
+            toggleModal(true, `
+                <div class="text-center">
+                    <div class="w-20 h-20 rounded-full bg-slate-900 mx-auto flex items-center justify-center mb-6 border-2 ${d.color.replace('text','border')} shadow-[0_0_25px_rgba(255,255,255,0.05)] relative overflow-hidden">
+                        <div class="absolute inset-0 bg-white/5 animate-pulse"></div>
+                        <i data-lucide="${d.icon}" class="w-10 h-10 ${d.color} relative z-10"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-1 font-game tracking-wide">${d.name}</h3>
+                    <p class="text-[0.625rem] text-slate-500 uppercase font-bold mb-6 tracking-[0.2em]">${d.archetype_group}</p>
+                    <div class="text-slate-300 text-sm leading-loose mb-8 bg-slate-900/60 p-6 rounded-2xl border border-white/5 font-serif italic relative">
+                        <div class="w-8 h-0.5 bg-${d.color.split('-')[1]}-500/30 mx-auto mb-4 rounded-full"></div>
+                        "${d.desc}"
+                    </div>
+                    <div class="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5 mb-6">
+                        <span class="text-[0.625rem] text-slate-500 uppercase font-bold tracking-widest">Nivel Actual</span>
+                        <span class="text-2xl font-bold text-white font-game">${gameState.stats[k]}</span>
+                    </div>
+                    <button onclick="toggleModal(false)" class="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-colors">Entendido</button>
+                </div>
+            `); 
+            lucide.createIcons(); 
+        };
+
+        function showHelp() {
+            toggleModal(true, `
+                <div class="text-center">
+                    <div class="mb-6 inline-block relative">
+                         <div class="absolute -inset-4 bg-teal-500/20 rounded-full blur-xl"></div>
+                         <h2 class="font-game text-2xl text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-emerald-400 relative z-10">Bienvenido, Viajero</h2>
+                    </div>
+                    <div class="text-left space-y-4 text-sm text-slate-300 mb-6 bg-slate-900/60 p-6 rounded-2xl border border-white/5 shadow-inner">
+                        <p class="leading-relaxed font-serif">
+                            <span class="text-white text-lg float-left mr-2 font-game text-teal-400">¿</span>Alguna vez has sentido que no eres tú quien lleva el volante de tu vida? Que una voz interna —crítica, miedosa, exigente— decide por ti. No estás solo. Es tu <strong>Villano</strong> tomando el control.
+                        </p>
+                        <p class="leading-relaxed">En <em>"El Lenguaje de la Mente"</em>, la Dra. Maite Moyá nos revela que dentro de ti habitan 15 Arquetipos. Fuerzas que pueden ser tu cárcel... o tus alas.</p>
+                        <p class="leading-relaxed">Este juego es tu <strong>gimnasio mental</strong>. Aquí no ganas puntos por vencer enemigos externos, sino por <strong>despertar</strong>. Por elegir conscientemente al Héroe sobre el Villano.</p>
+                    </div>
+                    <div class="text-left mb-6 bg-teal-900/20 p-5 rounded-2xl border border-teal-500/20">
+                        <h3 class="font-game text-teal-300 text-xs uppercase tracking-widest mb-4 flex items-center gap-2 font-bold">
+                            <i data-lucide="compass" class="w-4 h-4"></i> Instrucciones de Vuelo
+                        </h3>
+                        <ul class="space-y-3 text-xs text-slate-300">
+                            <li class="flex items-start gap-3"><div class="bg-teal-500/10 p-1.5 rounded-lg border border-teal-500/20 shrink-0"><i data-lucide="arrow-right" class="w-4 h-4 text-teal-400"></i></div><div><strong class="text-teal-200 block mb-0.5">Desliza a la DERECHA</strong><span>Para <em>Integrar</em> al Héroe. Elige la acción luminosa y gana XP.</span></div></li>
+                            <li class="flex items-start gap-3"><div class="bg-red-500/10 p-1.5 rounded-lg border border-red-500/20 shrink-0"><i data-lucide="arrow-left" class="w-4 h-4 text-red-400"></i></div><div><strong class="text-red-200 block mb-0.5">Desliza a la IZQUIERDA</strong><span>Para <em>Evitar</em> al Villano. Esquiva la trampa mental (sin XP).</span></div></li>
+                            <li class="flex items-start gap-3"><div class="bg-purple-500/10 p-1.5 rounded-lg border border-purple-500/20 shrink-0"><i data-lucide="bot" class="w-4 h-4 text-purple-400"></i></div><div><strong class="text-purple-200 block mb-0.5">Consulta al Mentor</strong><span>Si te sientes bloqueado, pide consejo al Oráculo en la pestaña Mentor.</span></div></li>
+                            <li class="flex items-start gap-3"><div class="bg-slate-500/10 p-1.5 rounded-lg border border-slate-500/20 shrink-0"><i data-lucide="type" class="w-4 h-4 text-slate-300"></i></div><div><strong class="text-slate-200 block mb-0.5">Calibra tu Visión</strong><span>Usa el icono 'T' junto al título para ajustar el tamaño del texto. A veces, para ver la verdad, necesitamos cambiar la escala de nuestra mirada.</span></div></li>
+                        </ul>
+                    </div>
+                    <div class="mb-6 text-center pt-2 border-t border-white/5">
+                        <p class="text-[0.625rem] text-teal-200/60 uppercase tracking-widest font-bold">Juega para practicar. Lee para entender.</p>
+                    </div>
+                    <button onclick="toggleModal(false)" class="w-full py-4 bg-gradient-to-r from-teal-700 to-emerald-800 hover:from-teal-600 hover:to-emerald-700 text-white rounded-xl font-bold text-xs uppercase tracking-[0.2em] shadow-lg shadow-emerald-900/50 transition-all transform active:scale-95">Iniciar Mi Transformación</button>
+                </div>
+            `);
+            lucide.createIcons();
         }
 
         function showToast(msg, type) {
@@ -904,6 +952,30 @@
             if(show) { el.classList.remove('hidden'); setTimeout(()=>el.classList.remove('opacity-0'),10); } else { el.classList.add('opacity-0'); setTimeout(()=>el.classList.add('hidden'),200); }
         }
 
+        // --- INIT ---
+        function initGame() {
+            generateBackground();
+            initFontSize();
+            
+            const saved = localStorage.getItem(SAVE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    gameState = { ...gameState, ...parsed };
+                    if(gameState.activeIds.length === 0 && gameState.pendingIds.length === 0 && gameState.completedIds.length === 0) setupNewGame();
+                } catch (e) { setupNewGame(); }
+            } else { setupNewGame(); }
+            
+            if (!localStorage.getItem('hasSeenIntro_v4')) {
+                setTimeout(() => showHelp(), 500); 
+                localStorage.setItem('hasSeenIntro_v4', 'true');
+            }
+
+            updateUI();
+            renderView();
+        }
+
+        // Boot
         initGame();
     </script>
 </body>
