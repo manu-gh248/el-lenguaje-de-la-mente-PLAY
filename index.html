@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>El Lenguaje de la Mente RPG</title>
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Iconos -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Iconos Lucide (UMD Build for Global Access) -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <!-- Confetti JS -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -19,7 +19,7 @@
         body { font-family: 'Lato', sans-serif; background-color: #020617; color: #e2e8f0; height: 100dvh; overflow: hidden; touch-action: pan-y; }
         .font-game { font-family: 'Cinzel', serif; }
         
-        /* Glassmorphism Classes */
+        /* Glassmorphism Classes - Definición Base */
         .glass-panel {
             background: rgba(2, 6, 23, 0.9);
             backdrop-filter: blur(20px);
@@ -28,8 +28,14 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
         
+        /* CORRECCIÓN: Eliminado @apply. Se replican las propiedades de glass-panel aquí */
         .card { 
-            @apply glass-panel;
+            background: rgba(2, 6, 23, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            
             border-radius: 1rem; 
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             position: relative;
@@ -53,7 +59,16 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(94, 234, 212, 0.2); border-radius: 0.25rem; }
         
-        .stat-box { @apply glass-panel; transition: transform 0.2s; border: 1px solid rgba(255,255,255,0.02); }
+        /* CORRECCIÓN: Eliminado @apply */
+        .stat-box { 
+            background: rgba(2, 6, 23, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            
+            transition: transform 0.2s; 
+            border: 1px solid rgba(255,255,255,0.02); 
+        }
         .stat-box:active { transform: scale(0.95); }
 
         /* Background */
@@ -256,8 +271,8 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        const APP_VERSION = "4.9.5"; 
-        const SAVE_KEY = "lenguajeMente_save_v4";
+        const APP_VERSION = "5.0.1"; 
+        const SAVE_KEY = "lenguajeMente_save_v5";
 
         // --- DEFINICIONES DE ESTADÍSTICAS ---
         const STAT_DEFINITIONS = {
@@ -530,20 +545,27 @@
         }
 
         function adjustFontSize(delta) {
-            let currentSize = parseInt(localStorage.getItem('fontSize_v4') || '100');
+            let currentSize = parseInt(localStorage.getItem('fontSize_v5') || '100');
             let newSize = currentSize + delta;
             if (newSize < 85) newSize = 85;
             if (newSize > 135) newSize = 135;
             document.documentElement.style.fontSize = `${newSize}%`;
             document.getElementById('fontSizeDisplay').innerText = `${newSize}%`;
-            localStorage.setItem('fontSize_v4', newSize);
+            localStorage.setItem('fontSize_v5', newSize);
         }
 
         function initFontSize() {
-            const savedSize = localStorage.getItem('fontSize_v4');
+            const savedSize = localStorage.getItem('fontSize_v5');
             if (savedSize) {
                 document.documentElement.style.fontSize = `${savedSize}%`;
                 document.getElementById('fontSizeDisplay').innerText = `${savedSize}%`;
+            }
+        }
+        
+        // --- HELPER PARA LUCIDE ---
+        function createIconsSafe() {
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
             }
         }
 
@@ -592,7 +614,7 @@
                 </div>
             `;
             toggleModal(true, html);
-            lucide.createIcons();
+            createIconsSafe();
         }
 
         function setupSliders() {
@@ -628,8 +650,15 @@
                 knob.addEventListener('mousedown', (e) => { isDragging = true; startX = e.clientX; e.preventDefault(); });
                 window.addEventListener('mousemove', (e) => { if(isDragging) onMove(e.clientX); });
                 window.addEventListener('mouseup', onEnd);
+                
+                // CORRECCIÓN: preventDefault en touchmove para evitar scroll mientras se desliza
                 knob.addEventListener('touchstart', (e) => { isDragging = true; startX = e.touches[0].clientX; }, {passive: false});
-                knob.addEventListener('touchmove', (e) => { if(isDragging) onMove(e.touches[0].clientX); }, {passive: false});
+                knob.addEventListener('touchmove', (e) => { 
+                    if(isDragging) {
+                        e.preventDefault(); // Evita scroll de pantalla
+                        onMove(e.touches[0].clientX); 
+                    }
+                }, {passive: false});
                 knob.addEventListener('touchend', onEnd);
             });
         }
@@ -687,7 +716,7 @@
             if (currentView === 'mentor') renderMentorView(c);
             if (currentView === 'origin') renderOriginView(c);
             if (currentView === 'profile') renderProfileView(c);
-            lucide.createIcons();
+            createIconsSafe();
         }
 
         window.renderMissions = () => { currentView = 'missions'; renderView(); };
@@ -900,7 +929,7 @@
                     <button onclick="toggleModal(false)" class="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-colors">Entendido</button>
                 </div>
             `); 
-            lucide.createIcons(); 
+            createIconsSafe();
         };
 
         function showHelp() {
@@ -934,7 +963,7 @@
                     <button onclick="toggleModal(false)" class="w-full py-4 bg-gradient-to-r from-teal-700 to-emerald-800 hover:from-teal-600 hover:to-emerald-700 text-white rounded-xl font-bold text-xs uppercase tracking-[0.2em] shadow-lg shadow-emerald-900/50 transition-all transform active:scale-95">Iniciar Mi Transformación</button>
                 </div>
             `);
-            lucide.createIcons();
+            createIconsSafe();
         }
 
         function showToast(msg, type) {
@@ -942,7 +971,7 @@
             t.className = `glass-panel border ${type=='success'?'border-emerald-500/50 text-emerald-300':'border-slate-500/50 text-slate-300'} px-5 py-4 rounded-2xl shadow-2xl flex items-center gap-4 slide-up backdrop-blur-xl z-50`;
             t.innerHTML = `<i data-lucide="${type=='success'?'check-circle':'alert-circle'}" class="w-5 h-5"></i><span class="text-[0.625rem] font-bold uppercase tracking-widest">${msg}</span>`;
             document.getElementById('toastContainer').appendChild(t);
-            lucide.createIcons();
+            createIconsSafe();
             setTimeout(()=>t.remove(), 3000);
         }
 
@@ -966,9 +995,9 @@
                 } catch (e) { setupNewGame(); }
             } else { setupNewGame(); }
             
-            if (!localStorage.getItem('hasSeenIntro_v4')) {
+            if (!localStorage.getItem('hasSeenIntro_v5')) {
                 setTimeout(() => showHelp(), 500); 
-                localStorage.setItem('hasSeenIntro_v4', 'true');
+                localStorage.setItem('hasSeenIntro_v5', 'true');
             }
 
             updateUI();
@@ -976,7 +1005,9 @@
         }
 
         // Boot
-        initGame();
+        window.addEventListener('load', () => {
+             initGame();
+        });
     </script>
 </body>
 </html>
